@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  # Creador de la Base de Datos (PostgreSQL)
+  postgres_db:
+    image: postgres:15-alpine
+    container_name: agentic_postgres
+    environment:
+      POSTGRES_USER: usuario_learning
+      POSTGRES_PASSWORD: password_secreto
+      POSTGRES_DB: aprendizaje_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Creador del Buzón de Mensajes (RabbitMQ)
+  rabbitmq_broker:
+    image: rabbitmq:3-management-alpine
+    container_name: agentic_rabbitmq
+    ports:
+      - "5672:5672"   # Puerto para que Python y NestJS envíen datos
+      - "15672:15672" # Puerto para el Panel Web visual de RabbitMQ
+    environment:
+      RABBITMQ_DEFAULT_USER: invitado
+      RABBITMQ_DEFAULT_PASS: invitado_pass
+
+# AC-11: Servidor de MLflow para versionado de IA
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.11.3
+    container_name: modulo7_mlflow
+    ports:
+      - "5000:5000"
+    command: mlflow server --host 0.0.0.0 --port 5000
+    volumes:
+      - ./mlruns:/mlruns
+
+volumes:
+  postgres_data:

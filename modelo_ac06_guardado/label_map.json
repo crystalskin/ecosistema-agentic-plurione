@@ -1,0 +1,10 @@
+{
+  "consulta_saldo": 0,
+  "cambio_plan": 1,
+  "cancelacion_servicio": 2,
+  "reclamo_facturacion": 3,
+  "problema_tecnico": 4,
+  "solicitar_humano": 5,
+  "info_productos": 6,
+  "otro": 7
+}

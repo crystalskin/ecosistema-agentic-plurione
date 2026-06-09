@@ -1,0 +1,21 @@
+{
+  "event_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "timestamp": "2024-05-20T14:32:00Z",
+  "session_id": "session-123",
+  "payload": {
+    "raw_text": "¡Me cobraron dos veces y quiero mi dinero ya!",
+    "intent": {
+      "label": "queja_cobro_duplicado",
+      "confidence": 0.94
+    },
+    "sentiment": {
+      "label": "negative",
+      "score": 0.89,
+      "emotion": "frustracion"
+    }
+  },
+  "metadata": {
+    "model_intent_version": "intent-v1",
+    "model_sentiment_version": "sentiment-v1"
+  }
+}

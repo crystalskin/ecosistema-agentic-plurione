@@ -1,0 +1,15 @@
+artifact_uri: mlflow-artifacts:/403033228520582494/5ca09fcc6c6e455996b635459312a96f/artifacts
+end_time: 1780426127374
+entry_point_name: ''
+experiment_id: '403033228520582494'
+lifecycle_stage: active
+run_id: 5ca09fcc6c6e455996b635459312a96f
+run_name: lora_r8_epochs3_20260602_124840
+run_uuid: 5ca09fcc6c6e455996b635459312a96f
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1780426120486
+status: 3
+tags: []
+user_id: Ale

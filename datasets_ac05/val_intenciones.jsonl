@@ -1,0 +1,100 @@
+{"texto_usuario": "¿Puedo migrar a otro plan? por favor", "intencion": "cambio_plan"}
+{"texto_usuario": "Quiero conocer sus servicios.", "intencion": "info_productos"}
+{"texto_usuario": "Ok, entendido", "intencion": "otro"}
+{"texto_usuario": "gracias por la ayuda", "intencion": "otro"}
+{"texto_usuario": "La página no carga.", "intencion": "problema_tecnico"}
+{"texto_usuario": "Necesito información sobre los paquetes por favor", "intencion": "info_productos"}
+{"texto_usuario": "Nada más por ahora.", "intencion": "otro"}
+{"texto_usuario": "Gracias por la ayuda por favor", "intencion": "otro"}
+{"texto_usuario": "Oye, necesito atención humana", "intencion": "solicitar_humano"}
+{"texto_usuario": "Quiero conocer sus servicios.", "intencion": "info_productos"}
+{"texto_usuario": "¿Cuánto saldo me queda?.", "intencion": "consulta_saldo"}
+{"texto_usuario": "quiero hablar con una persona", "intencion": "solicitar_humano"}
+{"texto_usuario": "¿qué planes tienen disponibles?", "intencion": "info_productos"}
+{"texto_usuario": "La página no carga por favor", "intencion": "problema_tecnico"}
+{"texto_usuario": "¿Qué planes tienen disponibles?.", "intencion": "info_productos"}
+{"texto_usuario": "hola", "intencion": "otro"}
+{"texto_usuario": "Oye, no me funciona la aplicación", "intencion": "problema_tecnico"}
+{"texto_usuario": "¿qué planes tienen disponibles?", "intencion": "info_productos"}
+{"texto_usuario": "Pásame con un agente", "intencion": "solicitar_humano"}
+{"texto_usuario": "¿Cómo veo mi saldo?.", "intencion": "consulta_saldo"}
+{"texto_usuario": "necesito dar de baja mi cuenta", "intencion": "cancelacion_servicio"}
+{"texto_usuario": "¿cuáles son los precios?", "intencion": "info_productos"}
+{"texto_usuario": "Necesito checar mi saldo pendiente.", "intencion": "consulta_saldo"}
+{"texto_usuario": "¿Qué ofrecen nuevo?", "intencion": "info_productos"}
+{"texto_usuario": "Oye, hola", "intencion": "otro"}
+{"texto_usuario": "por favor cancelen mi suscripción", "intencion": "cancelacion_servicio"}
+{"texto_usuario": "ok, entendido", "intencion": "otro"}
+{"texto_usuario": "¿Qué ofrecen nuevo? por favor", "intencion": "info_productos"}
+{"texto_usuario": "pásame con un agente", "intencion": "solicitar_humano"}
+{"texto_usuario": "Me cobraron dos veces este mes.", "intencion": "reclamo_facturacion"}
+{"texto_usuario": "Necesito atención humana.", "intencion": "solicitar_humano"}
+{"texto_usuario": "me cobraron dos veces este mes", "intencion": "reclamo_facturacion"}
+{"texto_usuario": "me puedes decir cuánto tengo disponible", "intencion": "consulta_saldo"}
+{"texto_usuario": "Oye, por favor cancelen mi suscripción", "intencion": "cancelacion_servicio"}
+{"texto_usuario": "Me interesa cambiar de paquete", "intencion": "cambio_plan"}
+{"texto_usuario": "Comuníquenme con alguien por favor", "intencion": "solicitar_humano"}
+{"texto_usuario": "¿Cómo veo mi saldo?", "intencion": "consulta_saldo"}
+{"texto_usuario": "Me interesa cambiar de paquete", "intencion": "cambio_plan"}
+{"texto_usuario": "Oye, ya no quiero el servicio, cancelenlo", "intencion": "cancelacion_servicio"}
+{"texto_usuario": "No me funciona la aplicación por favor", "intencion": "problema_tecnico"}
+{"texto_usuario": "Ok, entendido", "intencion": "otro"}
+{"texto_usuario": "No quiero hablar con un bot.", "intencion": "solicitar_humano"}
+{"texto_usuario": "Necesito atención humana por favor", "intencion": "solicitar_humano"}
+{"texto_usuario": "No me funciona la aplicación", "intencion": "problema_tecnico"}
+{"texto_usuario": "Oye, ¿cuánto saldo me queda?", "intencion": "consulta_saldo"}
+{"texto_usuario": "quiero reclamar un cargo indebido", "intencion": "reclamo_facturacion"}
+{"texto_usuario": "Oye, me puedes decir cuánto tengo disponible", "intencion": "consulta_saldo"}
+{"texto_usuario": "Nada más por ahora.", "intencion": "otro"}
+{"texto_usuario": "Comuníquenme con alguien.", "intencion": "solicitar_humano"}
+{"texto_usuario": "La página no carga por favor", "intencion": "problema_tecnico"}
+{"texto_usuario": "Quiero reclamar un cargo indebido", "intencion": "reclamo_facturacion"}
+{"texto_usuario": "tengo un cargo que no reconozco", "intencion": "reclamo_facturacion"}
+{"texto_usuario": "Oye, me puedes decir cuánto tengo disponible", "intencion": "consulta_saldo"}
+{"texto_usuario": "La página no carga.", "intencion": "problema_tecnico"}
+{"texto_usuario": "La factura está mal calculada por favor", "intencion": "reclamo_facturacion"}
+{"texto_usuario": "Deseo terminar mi contrato por favor", "intencion": "cancelacion_servicio"}
+{"texto_usuario": "necesito atención humana", "intencion": "solicitar_humano"}
+{"texto_usuario": "Quiero hablar con una persona", "intencion": "solicitar_humano"}
+{"texto_usuario": "Me interesa cambiar de paquete por favor", "intencion": "cambio_plan"}
+{"texto_usuario": "Oye, hola", "intencion": "otro"}
+{"texto_usuario": "Ya no quiero el servicio, cancelenlo", "intencion": "cancelacion_servicio"}
+{"texto_usuario": "¿Cómo veo mi saldo?", "intencion": "consulta_saldo"}
+{"texto_usuario": "Me cobraron dos veces este mes", "intencion": "reclamo_facturacion"}
+{"texto_usuario": "quiero hablar con una persona", "intencion": "solicitar_humano"}
+{"texto_usuario": "Gracias por la ayuda por favor", "intencion": "otro"}
+{"texto_usuario": "Pásame con un agente", "intencion": "solicitar_humano"}
+{"texto_usuario": "Ok, entendido.", "intencion": "otro"}
+{"texto_usuario": "Pásame con un agente por favor", "intencion": "solicitar_humano"}
+{"texto_usuario": "La página no carga", "intencion": "problema_tecnico"}
+{"texto_usuario": "Oye, ¿puedo migrar a otro plan?", "intencion": "cambio_plan"}
+{"texto_usuario": "quiero cancelar mi servicio", "intencion": "cancelacion_servicio"}
+{"texto_usuario": "Nada más por ahora.", "intencion": "otro"}
+{"texto_usuario": "La factura está mal calculada", "intencion": "reclamo_facturacion"}
+{"texto_usuario": "Oye, me puedes decir cuánto tengo disponible", "intencion": "consulta_saldo"}
+{"texto_usuario": "¿Cómo veo mi saldo?", "intencion": "consulta_saldo"}
+{"texto_usuario": "Me interesa cambiar de paquete por favor", "intencion": "cambio_plan"}
+{"texto_usuario": "Tengo un cargo que no reconozco.", "intencion": "reclamo_facturacion"}
+{"texto_usuario": "Quiero hablar con una persona por favor", "intencion": "solicitar_humano"}
+{"texto_usuario": "No me funciona la aplicación por favor", "intencion": "problema_tecnico"}
+{"texto_usuario": "Quiero actualizar mi suscripción.", "intencion": "cambio_plan"}
+{"texto_usuario": "Tengo un cargo que no reconozco", "intencion": "reclamo_facturacion"}
+{"texto_usuario": "Necesito un plan más barato por favor", "intencion": "cambio_plan"}
+{"texto_usuario": "Necesito checar mi saldo pendiente", "intencion": "consulta_saldo"}
+{"texto_usuario": "¿Cuánto saldo me queda?", "intencion": "consulta_saldo"}
+{"texto_usuario": "me interesa cambiar de paquete", "intencion": "cambio_plan"}
+{"texto_usuario": "Quiero actualizar mi suscripción.", "intencion": "cambio_plan"}
+{"texto_usuario": "se cae el servicio cada rato", "intencion": "problema_tecnico"}
+{"texto_usuario": "¿Cuánto saldo me queda?.", "intencion": "consulta_saldo"}
+{"texto_usuario": "Oye, no me funciona la aplicación", "intencion": "problema_tecnico"}
+{"texto_usuario": "Me cobraron algo que no compré por favor", "intencion": "reclamo_facturacion"}
+{"texto_usuario": "Me cobraron algo que no compré", "intencion": "reclamo_facturacion"}
+{"texto_usuario": "Deseo terminar mi contrato", "intencion": "cancelacion_servicio"}
+{"texto_usuario": "Buenos días", "intencion": "otro"}
+{"texto_usuario": "La página no carga", "intencion": "problema_tecnico"}
+{"texto_usuario": "Oye, tengo problemas de conexión", "intencion": "problema_tecnico"}
+{"texto_usuario": "Comuníquenme con alguien", "intencion": "solicitar_humano"}
+{"texto_usuario": "Oye, ¿qué planes tienen disponibles?", "intencion": "info_productos"}
+{"texto_usuario": "¿qué ofrecen nuevo?", "intencion": "info_productos"}
+{"texto_usuario": "¿Cuáles son los precios?", "intencion": "info_productos"}
+{"texto_usuario": "Quiero cancelar mi servicio por favor", "intencion": "cancelacion_servicio"}

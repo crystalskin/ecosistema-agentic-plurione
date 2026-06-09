@@ -1,0 +1,6 @@
+artifact_location: mlflow-artifacts:/403033228520582494
+creation_time: 1780418086592
+experiment_id: '403033228520582494'
+last_update_time: 1780418086592
+lifecycle_stage: active
+name: AC06_FineTuning_IntencionClasificador
