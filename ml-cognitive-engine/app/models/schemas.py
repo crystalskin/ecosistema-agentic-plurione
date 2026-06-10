@@ -18,6 +18,7 @@ class PayloadData(BaseModel):
     raw_text: str = Field(..., min_length=1, description="Texto original del usuario")
     intent: IntentData
     sentiment: SentimentData
+    generated_response: Optional[str] = Field(None, description="Respuesta generada por el LLM")
 
 class MetadataData(BaseModel):
     model_intent_version: str = Field(..., description="Ej: intent-v1")

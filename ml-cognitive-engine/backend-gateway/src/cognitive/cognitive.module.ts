@@ -8,9 +8,10 @@ import { CognizeEventEntity } from './cognize-event.entity';
 @Module({
   imports: [
     HttpModule,
-    TypeOrmModule.forFeature([CognizeEventEntity]), // <- AGREGADO
+    TypeOrmModule.forFeature([CognizeEventEntity]),
   ],
   controllers: [CognitiveController],
   providers: [CognitiveService],
+  exports: [CognitiveService], // <--- ¡AGREGA ESTA LÍNEA! ES LA LLAVE DE LA CAJA FUERTE
 })
 export class CognitiveModule {}

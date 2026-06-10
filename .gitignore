@@ -1,0 +1,12 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+datasets/
+
+# Node.js
+node_modules/
+dist/
+
+# Entornos y bases de datos
+.env

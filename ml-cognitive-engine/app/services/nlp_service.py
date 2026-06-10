@@ -1,5 +1,6 @@
 from transformers import pipeline
 from app.models.schemas import PayloadData, IntentData, SentimentData
+from app.services.llm_service import llm_service
 
 class NLPService:
     def __init__(self):
@@ -37,7 +38,7 @@ class NLPService:
         sentiment_data = SentimentData(
             label=sentiment_label,
             score=round(sent_result['score'], 4),
-            emotion="frustracion" if sentiment_label == "negative" else "neutral" # Lógica simple por ahora
+            emotion="frustracion" if sentiment_label == "negative" else "neutral"
         )
 
         # 2. Analizar Intención (Zero-Shot)
@@ -50,11 +51,15 @@ class NLPService:
             confidence=intent_confidence
         )
 
-        # 3. Construir y devolver el Payload
+        # 3. NUEVO: Generar la respuesta conversacional usando el LLM
+        response = llm_service.generate_response(raw_text, top_intent, sentiment_label)
+
+        # 4. Construir y devolver el Payload
         payload = PayloadData(
             raw_text=raw_text,
             intent=intent_data,
-            sentiment=sentiment_data
+            sentiment=sentiment_data,
+            generated_response=response # <--- AGREGADO
         )
         
         return payload
