@@ -1,36 +1,42 @@
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+from transformers import AutoTokenizer, AutoModelForCausalLM
 
 class LLMService:
     def __init__(self):
-        print("[LLM] Cargando modelo generativo FLAN-T5 (Método Manual)...")
-        model_name = "google/flan-t5-base"
+        print("[LLM] Cargando modelo TinyLlama (Chat real)...")
+        model_id = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
         
-        # Cargamos el "traductor" (Tokenizer) y el "cerebro" (Model) por separado
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
-        print("[LLM] Modelo generativo listo.")
+        self.tokenizer = AutoTokenizer.from_pretrained(model_id)
+        self.model = AutoModelForCausalLM.from_pretrained(model_id).to("cpu")
+        print("[LLM] Modelo TinyLlama listo para chatear.")
 
     def generate_response(self, raw_text: str, intent: str, sentiment: str) -> str:
-        # Le damos la instrucción
-        prompt = f"""
-        You are a helpful customer service agent for PluriOne.
-        The user said: '{raw_text}'
-        You know their intent is '{intent}' and their sentiment is '{sentiment}'.
-        Provide a short, polite, and helpful response in Spanish.
-        """
+        # TinyLlama usa un formato de chat especial
+        prompt = f"""<|user|>
+Eres un agente amable de PluriOne. El cliente dijo: '{raw_text}'. 
+Su intención es '{intent}' y su sentimiento es '{sentiment}'.
+Responde en 1 sola frase en español.<|assistant| >
+"""
         
-        # 1. Convertimos el texto a números que la IA entiende
         inputs = self.tokenizer(prompt, return_tensors="pt")
         
-        # 2. La IA piensa y genera los números de la respuesta
-        outputs = self.model.generate(**inputs, max_new_tokens=100)
+        # Generamos la respuesta
+        outputs = self.model.generate(
+            **inputs, 
+            max_new_tokens=80, 
+            temperature=0.7,      
+            do_sample=True,       
+            pad_token_id=self.tokenizer.eos_token_id
+        )
         
-        # 3. Convertimos los números de vuelta a texto
+        # Cortamos el prompt de la respuesta final
         response_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
         
-        # 4. Si la IA se quedó en blanco, usamos un mensaje de respaldo
-        if not response_text or len(response_text) < 5:
-            response_text = "Entiendo tu situación. Un agente se comunicará contigo pronto."
+        # Limpiamos para quitar el eco del prompt y quedarnos solo con lo que respondió
+        if "<|assistant| >" in response_text:
+            response_text = response_text.split("<|assistant| >")[-1].strip()
+            
+        if not response_text:
+            response_text = "Entiendo tu situación, estoy aquí para ayudarte."
             
         return response_text
 
