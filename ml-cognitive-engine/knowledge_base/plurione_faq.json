@@ -1,0 +1,18 @@
+[
+  {
+    "q": "¿Cuál es el horario de atención?",
+    "a": "Nuestro horario de atención al cliente es de lunes a viernes de 9:00 AM a 6:00 PM, tiempo de la Ciudad de México."
+  },
+  {
+    "q": "¿Dónde están ubicados?",
+    "a": "Estamos ubicados en Puebla 46, Colonia Roma Norte, Alcaldía Cuauhtémoc, C.P. 06700, CDMX."
+  },
+  {
+    "q": "¿Cómo puedo contactarlos por teléfono?",
+    "a": "Puedes llamarnos al 55 1900 3503 o escribirnos a contacto@develop.com.mx."
+  },
+  {
+    "q": "¿Qué servicios ofrecen?",
+    "a": "Ofrecemos consultoría, desarrollo de software a medida, capacitación en TI y creación de equipos de talento tecnológico."
+  }
+]
