@@ -1,3 +1,4 @@
+import time
 from app.services.retriever_service import retriever_service
 
 class LLMService:
@@ -11,8 +12,10 @@ class LLMService:
 
     def generate_response(self, raw_text: str, intent: str, sentiment: str) -> str:
         # 1. Buscar en el FAQ con umbral más bajo (0.3)
+        t_rag0 = time.perf_counter()
         faq_answer, score = retriever_service.search(raw_text, threshold=0.3)
-        print(f"[RAG] Score: {score:.3f} | FAQ encontrado: {faq_answer is not None}")
+        t_rag1 = time.perf_counter()
+        print(f"[TIMING RAG] busqueda_rag={t_rag1-t_rag0:.3f}s | score={score:.3f} | encontrado={faq_answer is not None}")
 
         # 2. Definir intenciones que pueden usar FAQ
         intenciones_informativas = [

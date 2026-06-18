@@ -1,3 +1,4 @@
+import time
 from fastapi import APIRouter, HTTPException
 from app.models.schemas import CognizeEvent, MetadataData
 from app.services.nlp_service import nlp_service
@@ -12,9 +13,12 @@ router = APIRouter(prefix="/api/v1", tags=["Cognitive Engine"])
 @router.post("/cognize", response_model=CognizeEvent)
 def process_cognize_event(text: str, session_id: str):
     try:
+        t_inicio = time.perf_counter()
+
         # 1. La IA piensa
         payload = nlp_service.analyze_text(text, session_id)
-        
+        t_nlp = time.perf_counter()
+
         # 2. Armamos el evento final
         evento = CognizeEvent(
             session_id=session_id,
@@ -24,10 +28,20 @@ def process_cognize_event(text: str, session_id: str):
                 model_sentiment_version="distilbert-sst2"
             )
         )
-        
+        t_evento = time.perf_counter()
+
         # 3. Publicamos de forma asíncrona en RabbitMQ (para que el Módulo 7 lo lea después)
         broker_service.publish_cognize_event(evento)
-        
+        t_broker = time.perf_counter()
+
+        print(
+            f"[TIMING /cognize] "
+            f"pipeline_nlp={t_nlp-t_inicio:.3f}s | "
+            f"armar_evento={t_evento-t_nlp:.3f}s | "
+            f"broker_rabbitmq={t_broker-t_evento:.3f}s | "
+            f"TOTAL={t_broker-t_inicio:.3f}s"
+        )
+
         # 4. Devolvemos la respuesta inmediatamente al cliente (NestJS/Frontend)
         return evento
 

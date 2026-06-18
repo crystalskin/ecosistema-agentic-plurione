@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CognitiveModule } from './cognitive/cognitive.module';
+import { ChatGateway } from './chat/chat.gateway';
 
 @Module({
   imports: [
@@ -11,9 +12,9 @@ import { CognitiveModule } from './cognitive/cognitive.module';
       type: 'postgres',
       host: 'localhost',
       port: 5432,
-      username: 'invitado',       // ⚠️ VERIFICA EN TU DOCKER-COMPOSE.YML
-      password: 'invitado_pass',  // ⚠️ VERIFICA EN TU DOCKER-COMPOSE.YML
-      database: 'postgres',       // ⚠️ EL NOMBRE DE TU BASE DE DATOS
+      username: 'usuario_learning',
+      password: 'password_secreto',
+      database: 'aprendizaje_db',
       autoLoadEntities: true,     // Crea la tabla automáticamente si no existe
       synchronize: true,          // (Solo para desarrollo, mantiene la tabla sincronizada con el código)
     }),
@@ -21,6 +22,6 @@ import { CognitiveModule } from './cognitive/cognitive.module';
     CognitiveModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, ChatGateway],
 })
 export class AppModule {}

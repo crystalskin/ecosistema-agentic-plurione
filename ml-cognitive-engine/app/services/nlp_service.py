@@ -1,6 +1,10 @@
+import time
 from transformers import pipeline
 from app.models.schemas import PayloadData, IntentData, SentimentData
 from app.services.llm_service import llm_service
+from app.services.retriever_service import retriever_service
+
+RAG_SHORTCIRCUIT_THRESHOLD = 0.90
 
 class NLPService:
     def __init__(self):
@@ -28,8 +32,23 @@ class NLPService:
         print("[NLP] Modelos listos.")
 
     def analyze_text(self, raw_text: str, session_id: str) -> PayloadData:
+        t0 = time.perf_counter()
+
+        # CORTOCIRCUITO: si el FAQ responde con alta confianza, omite BERT + BART
+        faq_rapido, rag_score = retriever_service.search(raw_text, threshold=RAG_SHORTCIRCUIT_THRESHOLD)
+        if faq_rapido is not None:
+            print(f"[SHORTCIRCUIT] score={rag_score:.3f} → BERT+BART omitidos | total={time.perf_counter()-t0:.3f}s")
+            return PayloadData(
+                raw_text=raw_text,
+                intent=IntentData(label="rag_directo", confidence=round(rag_score, 4)),
+                sentiment=SentimentData(label="neutral", score=round(rag_score, 4), emotion="neutral"),
+                generated_response=f"¡Claro! {faq_rapido} ¿Puedo ayudarte en algo más?",
+            )
+
         # 1. Sentimiento
+        t_bert0 = time.perf_counter()
         sent_result = self.sentiment_analyzer(raw_text)[0]
+        t_bert1 = time.perf_counter()
         stars = int(sent_result['label'][0])
 
         if stars <= 1:
@@ -50,7 +69,9 @@ class NLPService:
             emotion = "satisfecho"
 
         # 2. Intención Zero-Shot
+        t_bart0 = time.perf_counter()
         intent_result = self.intent_classifier(raw_text, self.intents_labels)
+        t_bart1 = time.perf_counter()
         top_intent = intent_result['labels'][0]
         intent_confidence = round(intent_result['scores'][0], 4)
 
@@ -76,7 +97,17 @@ class NLPService:
         )
 
         # 4. Generar respuesta (híbrida)
+        t_llm0 = time.perf_counter()
         response = llm_service.generate_response(raw_text, top_intent, sentiment_label)
+        t_llm1 = time.perf_counter()
+
+        print(
+            f"[TIMING NLP] "
+            f"bert_sentiment={t_bert1-t_bert0:.3f}s | "
+            f"bart_intent={t_bart1-t_bart0:.3f}s | "
+            f"llm_rag={t_llm1-t_llm0:.3f}s | "
+            f"total_nlp={t_llm1-t0:.3f}s"
+        )
 
         return PayloadData(
             raw_text=raw_text,
