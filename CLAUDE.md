@@ -42,6 +42,10 @@ propios errores. Arquitectura **Event-Driven + Microservicios**. Cubre los Módu
 4. Python ejecuta 4 pasos en cadena:
    - **RAG** (`retriever_service`): busca en el FAQ por similitud coseno (Sentence Transformers).
    - **NLP** (`nlp_service`): clasifica intención (Zero-Shot con BART) y sentimiento (modelo multilingüe de 5 estrellas).
+     **Optimización activa (shortcircuit RAG)**: si `retriever_service` devuelve score >= 0.90,
+     se omiten `bert_sentiment` y `bart_intent` y se responde directo con el FAQ. El campo
+     `intent` se marca como `"rag_directo"` (no null). Reduce consultas FAQ de ~1.3 s a
+     ~0.065 s. Para scores < 0.90 se ejecuta el pipeline NLP completo.
    - **LLM** (`llm_service`): híbrido. Si el RAG encuentra respuesta y la intención es informativa → paráfrasis con plantillas; si no → plantillas empáticas según sentimiento/intención. **Sin modelos generativos, para evitar alucinaciones.**
    - **Broker** (`broker_service`): publica el evento en **RabbitMQ (5672)**.
 5. NestJS recibe la respuesta de Python, la guarda en **PostgreSQL** (si el servicio de métricas está activo) y la devuelve a React.
@@ -156,7 +160,9 @@ Modulo 7/
 ---
 
 ## Estado de los módulos
-- **M1 — Agente conversacional**: ✅ Completado. Sistema híbrido RAG + plantillas, sin alucinaciones.
+- **M1 — Agente conversacional**: ✅ Completado y verificado end-to-end.
+  Flujo operativo: React → WebSocket (`chat.gateway.ts`) → NestJS → FastAPI → RabbitMQ → `consumidor.py`.
+  Sistema híbrido RAG + plantillas con shortcircuit (FAQ ~0.065 s, NLP completo ~1.2 s). Sin alucinaciones.
 - **M2 — Dashboard de métricas**: 🚧 En progreso. Endpoint `GET /api/cognitive/metrics` y
   `MetricsPage.jsx` (Recharts) creados, pero `MetricsService` aún no probado con datos reales.
   *Pendiente*: verificar `MetricsService` contra la entidad `CognizeEventEntity`; ajustar

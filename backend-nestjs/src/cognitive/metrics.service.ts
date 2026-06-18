@@ -34,6 +34,29 @@ export class MetricsService {
       take: 20,
     });
 
-    return { total, porSentimiento, porIntencion, ultimos };
+    const sentimentCounts = porSentimiento.map(r => ({
+      sentiment: r.sentiment ?? 'desconocido',
+      count: parseInt(r.total, 10),
+    }));
+
+    const intentCounts = porIntencion.map(r => ({
+      intent: r.intent ?? 'desconocido',
+      count: parseInt(r.total, 10),
+      avgConfidence: parseFloat(Number(r.confianza_promedio).toFixed(4)),
+    }));
+
+    const totalPonderado = intentCounts.reduce((acc, r) => acc + r.count, 0);
+    const avgConfidence =
+      totalPonderado > 0
+        ? intentCounts.reduce((acc, r) => acc + r.avgConfidence * r.count, 0) / totalPonderado
+        : 0;
+
+    return {
+      total,
+      sentimentCounts,
+      intentCounts,
+      avgConfidence: parseFloat(avgConfidence.toFixed(4)),
+      ultimos,
+    };
   }
 }
