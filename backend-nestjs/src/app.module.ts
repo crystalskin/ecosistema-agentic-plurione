@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CognitiveModule } from './cognitive/cognitive.module';
+import { EscalamientoModule } from './escalamiento/escalamiento.module';
 import { ChatGateway } from './chat/chat.gateway';
 
 @Module({
@@ -20,6 +21,7 @@ import { ChatGateway } from './chat/chat.gateway';
     }),
     // 2. Nuestro módulo
     CognitiveModule,
+    EscalamientoModule,
   ],
   controllers: [AppController],
   providers: [AppService, ChatGateway],

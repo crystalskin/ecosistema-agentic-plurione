@@ -6,6 +6,9 @@ function ChatPage() {
     { text: "Conectando con el agente...", sender: 'system' }
   ]);
   const [input, setInput] = useState('');
+  const [showEscalate, setShowEscalate] = useState(false);
+  const [botActivo, setBotActivo] = useState(true);
+  const [escalateContext, setEscalateContext] = useState(null);
   const chatBoxRef = useRef(null);
   const socketRef = useRef(null);
 
@@ -32,10 +35,27 @@ function ChatPage() {
       }
     });
 
+    // Escalamiento: backend detectó frustración
+    socket.on("escalate_human", (data) => {
+      setEscalateContext(data);
+      setShowEscalate(true);
+      setMessages(prev => [...prev, {
+        text: "🔴 Detectamos frustración en tu mensaje. ¿Deseas hablar con un agente humano?",
+        sender: 'system'
+      }]);
+    });
+
+    // Confirmación de transferencia
+    socket.on("transfer_confirmed", (data) => {
+      setMessages(prev => [...prev, { text: `✅ ${data.message}`, sender: 'system' }]);
+    });
+
     // Limpieza al desmontar (evita duplicados en StrictMode)
     return () => {
       socket.off("connect");
       socket.off("ai_response");
+      socket.off("escalate_human");
+      socket.off("transfer_confirmed");
       socket.disconnect();
     };
   }, []);
@@ -45,9 +65,32 @@ function ChatPage() {
     chatBoxRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  const handleRequestHuman = () => {
+    socketRef.current.emit("request_human", {
+      session_id: "session-react-01",
+      raw_text: escalateContext?.message ?? '',
+      sentiment_score: escalateContext?.score ?? null,
+      emotion: escalateContext?.emotion ?? null,
+    });
+    setShowEscalate(false);
+    setBotActivo(false);
+    setMessages(prev => [...prev, {
+      text: "🧑‍💼 Solicitaste hablar con un agente. El bot se ha detenido.",
+      sender: 'system'
+    }]);
+  };
+
   const sendMessage = (e) => {
     e.preventDefault();
     if (!input.trim()) return;
+    if (!botActivo) {
+      setMessages(prev => [...prev, {
+        text: "⏸️ El bot está en pausa. Esperando agente humano...",
+        sender: 'system'
+      }]);
+      setInput('');
+      return;
+    }
 
     setMessages(prev => [...prev, { text: input, sender: 'user' }]);
     socketRef.current.emit("user_message", {
@@ -71,6 +114,22 @@ function ChatPage() {
         ))}
         <div ref={chatBoxRef} />
       </div>
+      {showEscalate && (
+        <div style={{ padding: '0.5rem 1rem', background: '#fff3f3', borderTop: '1px solid #ffcccc', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <button
+            onClick={handleRequestHuman}
+            style={{ background: '#c62828', color: '#fff', border: 'none', borderRadius: '6px', padding: '0.5rem 1.25rem', cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem' }}
+          >
+            🧑‍💼 Hablar con un agente humano
+          </button>
+          <button
+            onClick={() => setShowEscalate(false)}
+            style={{ background: 'transparent', color: '#757575', border: '1px solid #ccc', borderRadius: '6px', padding: '0.5rem 0.75rem', cursor: 'pointer', fontSize: '0.85rem' }}
+          >
+            Continuar con el bot
+          </button>
+        </div>
+      )}
       <form className="chat-input" onSubmit={sendMessage}>
         <input
           type="text"
