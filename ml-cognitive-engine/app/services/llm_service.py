@@ -1,37 +1,61 @@
-from transformers import AutoTokenizer, AutoModelForCausalLM
 from app.services.retriever_service import retriever_service
 
 class LLMService:
+    """
+    Servicio híbrido: usa el RAG como fuente de verdad y plantillas
+    empáticas cuando no hay información en la base de conocimiento.
+    """
+
     def __init__(self):
-        print("[LLM] Cargando modelo TinyLlama (Chat real)...")
-        model_id = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
-        
-        self.tokenizer = AutoTokenizer.from_pretrained(model_id)
-        self.model = AutoModelForCausalLM.from_pretrained(model_id).to("cpu")
-        print("[LLM] Modelo TinyLlama listo para chatear.")
+        print("[HybridAgent] Modo híbrido activado (RAG + plantillas).")
 
     def generate_response(self, raw_text: str, intent: str, sentiment: str) -> str:
-        # 1. BUSCAR EN MEMORIA (RAG)
-        faq_answer, score = retriever_service.search(raw_text)
-        if faq_answer:
-            return faq_answer
+        # 1. Buscar en el FAQ con umbral más bajo (0.3)
+        faq_answer, score = retriever_service.search(raw_text, threshold=0.3)
+        print(f"[RAG] Score: {score:.3f} | FAQ encontrado: {faq_answer is not None}")
 
-        # 2. RESPUESTA EMPÁTICA (Si hay problemas)
-        if sentiment == 'negative' or intent in ['queja_cobro_duplicado', 'solicitud_reembolso']:
-            return f"Lamento mucho la inconveniencia. Entiendo tu frustración. Un agente especializado revisará tu caso de {intent} inmediatamente para ayudarte."
+        # 2. Definir intenciones que pueden usar FAQ
+        intenciones_informativas = [
+            "consulta_horario", "consulta_direccion", "informacion_general",
+            "consulta_estado_orden"
+        ]
 
-        # 3. LLM CREATIVO (Si es saludo o algo general)
-        prompt = f"User: {raw_text}\nAgent:"
-        inputs = self.tokenizer(prompt, return_tensors="pt")
-        outputs = self.model.generate(**inputs, max_new_tokens=50, temperature=0.7, do_sample=True, pad_token_id=self.tokenizer.eos_token_id)
-        
-        response_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-        if "Agent:" in response_text:
-            response_text = response_text.split("Agent:")[-1].strip()
-            
-        if not response_text or len(response_text) < 3:
-            response_text = "Hola, estoy aquí para ayudarte. ¿En qué te puedo servir?"
-            
-        return response_text
+        # 3. Solo usar FAQ si la intención es informativa Y el score es decente
+        if intent in intenciones_informativas and faq_answer and score >= 0.3:
+            if "horario" in intent or "hora" in faq_answer.lower():
+                return f"¡Claro! {faq_answer} ¿Te puedo ayudar en algo más?"
+            elif "dirección" in intent or "direccion" in intent or "ubicado" in faq_answer.lower():
+                return f"Nuestra ubicación: {faq_answer} ¿Necesitas algo más?"
+            else:
+                return f"{faq_answer} ¿Necesitas algo más?"
+
+        # 4. Plantillas por sentimiento e intención
+        if sentiment == "negative":
+            if "queja" in intent or "problema" in intent or "fallo" in intent:
+                return ("Lamento muchísimo el inconveniente. Entiendo tu molestia y quiero ayudarte a resolverlo cuanto antes. "
+                        "¿Podrías darme más detalles de lo sucedido? Si prefieres, te comunico de inmediato con un agente humano.")
+            else:
+                return ("Siento que estés pasando por esto. Cuéntame un poco más para entender mejor tu situación "
+                        "y encontrar una solución. Si lo deseas, puedo transferirte con un agente humano.")
+
+        # 5. Intenciones que requieren soporte técnico o asistencia (sentimiento neutro)
+        if intent in ["problema_tarjeta_bancaria", "fallo_tecnico", "solicitud_reembolso"]:
+            return ("Entiendo que tienes una dificultad. ¿Podrías darme más detalles sobre lo que sucede? "
+                    "Así puedo orientarte mejor o, si lo prefieres, comunicarte con un agente humano.")
+
+        # 6. Consultas sin FAQ
+        if intent in ["consulta_horario", "consulta_direccion", "informacion_general"]:
+            return ("Permíteme revisar esa información. ¿Podrías ser un poco más específico? "
+                    "Así te doy la respuesta exacta que necesitas.")
+
+        # 7. Saludo / Despedida
+        if intent == "saludo":
+            return "¡Hola! Soy el asistente virtual de PluriOne. ¿En qué puedo ayudarte hoy?"
+
+        if intent == "despedida":
+            return "¡Gracias por contactarnos! Estamos a tu disposición cuando lo necesites. ¡Que tengas excelente día!"
+
+        # 8. Fallback genérico
+        return "Gracias por tu mensaje. ¿Podrías darme más detalles para entender mejor cómo ayudarte?"
 
 llm_service = LLMService()

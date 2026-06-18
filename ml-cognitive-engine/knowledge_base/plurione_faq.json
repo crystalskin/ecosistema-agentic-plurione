@@ -14,5 +14,17 @@
   {
     "q": "¿Qué servicios ofrecen?",
     "a": "Ofrecemos consultoría, desarrollo de software a medida, capacitación en TI y creación de equipos de talento tecnológico."
+  },
+  {
+  "q": "¿A qué hora abren?",
+  "a": "Nuestro horario de atención al cliente es de lunes a viernes de 9:00 a.m. a 6:00 p.m. (hora de la Ciudad de México)."
+  },
+  {
+  "q": "¿A qué hora abren?",
+  "a": "Nuestro horario de atención al cliente es de lunes a viernes de 9:00 a.m. a 6:00 p.m., hora de la Ciudad de México."
+  },
+  {
+    "q": "¿Cuál es su horario?",
+    "a": "Atendemos de lunes a viernes de 9:00 a.m. a 6:00 p.m., hora de la Ciudad de México."
   }
 ]

@@ -1,24 +1,15 @@
 """
-consumidor.py — VERSIÓN ACTUALIZADA para AC-04 + AC-05
-Ahora recibe y guarda el texto de la conversación además de los metadatos.
-
-CONTRATO DE MENSAJE ACTUALIZADO:
-{
-  "id_interaccion": "UUID",
-  "modulo_origen": "chatbot | resolutor | sentimiento",
-  "timestamp": "ISO 8601",
-  "resultado": "EXITOSO | FALLIDO",
-  "paso_fallido": "string o null",
-  "sentimiento_final": "POSITIVO | NEUTRAL | NEGATIVO",
-  "texto_usuario": "Lo que escribió el usuario",         <-- NUEVO
-  "respuesta_agente": "Lo que respondió el bot/sistema"  <-- NUEVO
-}
+consumidor.py — VERSIÓN FINAL para el ecosistema Agentic completo.
+Recibe eventos CognizeEvent (estructura anidada) desde agentic_exchange,
+los transforma al formato legado de la tabla logs_interacciones,
+y los guarda en PostgreSQL para el módulo de aprendizaje continuo.
 """
 
 import pika
 import json
 import psycopg2
 from datetime import datetime
+from uuid import UUID
 
 # =====================================================================
 # 1. CONFIGURACIÓN DE LA BASE DE DATOS
@@ -33,27 +24,23 @@ def conectar_db():
     )
 
 # =====================================================================
-# AC-04: LÓGICA DE DETECCIÓN DEL PUNTO DE RUPTURA (sin cambios)
+# 2. DETECCIÓN DEL PUNTO DE RUPTURA (adaptado al nuevo esquema)
 # =====================================================================
-def analizar_punto_ruptura(datos):
-    resultado    = datos.get('resultado')
-    paso_fallido = datos.get('paso_fallido')
-    sentimiento  = datos.get('sentimiento_final')
-
+def analizar_punto_ruptura(resultado, intent, sentiment):
     if resultado == "EXITOSO":
-        return None  # Sin error — None es más limpio que "N/A"
+        return None
 
-    if paso_fallido == "transferencia_a_humano" and sentimiento == "NEGATIVO":
+    # Fallos según el contexto actual (no hay 'paso_fallido' explícito)
+    emotion = sentiment.get('emotion')
+    if emotion and 'frustracion' in emotion.lower():
         return "FRUSTRACION_CLIENTE"
-    elif paso_fallido in ["verificacion_pago_crm", "timeout_api", "conexion_base_datos"]:
-        return "FALLO_INTEGRACION_TECNICA"
-    elif paso_fallido == "intencion_no_reconocida":
+    elif intent.get('confidence', 1.0) < 0.5:
         return "FALLO_ENTRENAMIENTO_NLP"
     else:
         return "CAUSA_DESCONOCIDA"
 
 # =====================================================================
-# INICIALIZACIÓN — Crear tabla si no existe
+# 3. PREPARACIÓN DE LA BASE DE DATOS
 # =====================================================================
 try:
     conn = conectar_db()
@@ -82,41 +69,60 @@ except Exception as e:
     print(f" [X] Error en PostgreSQL: {e}", flush=True)
 
 # =====================================================================
-# 2. CONFIGURACIÓN DE RABBITMQ
+# 4. CONFIGURACIÓN DE RABBITMQ (exchange tal cual lo define FastAPI)
 # =====================================================================
+EXCHANGE_NAME = "agentic_exchange"
+QUEUE_NAME    = "atencion_cliente_logs"
+BINDING_KEY   = "cognicion.#"   # captura 'cognicion.evaluada' y derivados
+
 credenciales = pika.PlainCredentials('invitado', 'invitado_pass')
 conexion     = pika.BlockingConnection(
     pika.ConnectionParameters(host='localhost', port=5672, credentials=credenciales)
 )
 canal = conexion.channel()
-canal.queue_declare(queue='atencion_cliente_logs', durable=True)
-
-print(" [*] Escuchando mensajes (AC-04 + AC-05). Para salir presiona CTRL+C...\n", flush=True)
+canal.exchange_declare(exchange=EXCHANGE_NAME, exchange_type='topic', durable=True)
+canal.queue_declare(queue=QUEUE_NAME, durable=True)
+canal.queue_bind(exchange=EXCHANGE_NAME, queue=QUEUE_NAME, routing_key=BINDING_KEY)
+print(f" [*] Conectado a '{EXCHANGE_NAME}' con binding '{BINDING_KEY}'. Esperando mensajes...", flush=True)
 
 # =====================================================================
-# 3. RECEPCIÓN Y PROCESAMIENTO
+# 5. PROCESAMIENTO DE MENSAJES (ahora con el esquema CognizeEvent)
 # =====================================================================
 def recibir_mensaje(ch, method, properties, body):
     try:
         datos = json.loads(body.decode('utf-8'))
-        id_interaccion = datos.get('id_interaccion')
-        print(f"\n[!] Procesando Interacción ID: {id_interaccion}", flush=True)
+        event_id = datos.get('event_id')        # UUID
+        session  = datos.get('session_id')
+        payload  = datos.get('payload', {})
+        timestamp = datos.get('timestamp')
 
-        # AC-04: Clasificar punto de ruptura
-        clasificacion = analizar_punto_ruptura(datos)
-        if datos.get('resultado') == "FALLIDO":
-            print(f" 🔍 [PUNTO DE RUPTURA]: {clasificacion}", flush=True)
+        # Extraer los datos planos que necesita la tabla
+        texto_usuario    = payload.get('raw_text')
+        intent           = payload.get('intent', {})
+        sentiment        = payload.get('sentiment', {})
+        respuesta_agente = payload.get('generated_response')
+
+        # Derivar 'resultado': EXITOSO si hay respuesta generada y no es vacía
+        if respuesta_agente and respuesta_agente.strip():
+            resultado = "EXITOSO"
         else:
-            print(" [✓] Interacción exitosa sin errores.", flush=True)
+            resultado = "FALLIDO"
 
-        # AC-05 prep: registrar texto si viene en el mensaje
-        texto_usuario    = datos.get('texto_usuario')
-        respuesta_agente = datos.get('respuesta_agente')
+        # Sentimiento plano para la columna
+        sentimiento_label = sentiment.get('label', 'NEUTRAL').upper()
+
+        print(f"\n[!] Procesando evento {event_id} | Sesión: {session}", flush=True)
+
+        # Clasificación del error
+        clasificacion = analizar_punto_ruptura(resultado, intent, sentiment)
+        if resultado == "FALLIDO":
+            print(f" 🔍 [PUNTO DE RUPTURA]: {clasificacion}", flush=True)
+
         if texto_usuario:
-            print(f" 📝 Texto del usuario capturado: {texto_usuario[:60]}...", flush=True)
+            print(f" 📝 Texto: {texto_usuario[:60]}...", flush=True)
 
-        # Guardar en PostgreSQL
-        conn   = conectar_db()
+        # Guardar en PostgreSQL con el formato heredado
+        conn = conectar_db()
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO logs_interacciones (
@@ -127,12 +133,12 @@ def recibir_mensaje(ch, method, properties, body):
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (id_interaccion) DO NOTHING;
         """, (
-            id_interaccion,
-            datos.get('modulo_origen'),
-            datos.get('timestamp'),
-            datos.get('resultado'),
-            datos.get('paso_fallido'),
-            datos.get('sentimiento_final'),
+            event_id,
+            'cognicion',                  # módulo_origen fijo para este flujo
+            timestamp,
+            resultado,
+            None,                         # ya no tenemos paso_fallido explícito
+            sentimiento_label,
             texto_usuario,
             respuesta_agente,
             clasificacion,
@@ -140,12 +146,12 @@ def recibir_mensaje(ch, method, properties, body):
         conn.commit()
         cursor.close()
         conn.close()
-        print(" [✓] Guardado en PostgreSQL con texto y clasificación.", flush=True)
+        print(" [✓] Guardado en PostgreSQL.", flush=True)
 
     except Exception as error:
-        print(f" [X] Error procesando mensaje: {error}", flush=True)
+        print(f" [X] Error: {error}", flush=True)
 
     ch.basic_ack(delivery_tag=method.delivery_tag)
 
-canal.basic_consume(queue='atencion_cliente_logs', on_message_callback=recibir_mensaje)
+canal.basic_consume(queue=QUEUE_NAME, on_message_callback=recibir_mensaje)
 canal.start_consuming()
