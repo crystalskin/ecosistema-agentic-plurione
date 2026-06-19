@@ -75,6 +75,7 @@ Modulo 7/
 ├── validacion_rollback_ac08.py
 ├── .gitignore
 ├── CLAUDE.md
+├── iniciar.ps1                        # Script de arranque del ecosistema completo
 │
 ├── ml-cognitive-engine/          # Motor cognitivo (Python)
 │   ├── knowledge_base/plurione_faq.json
@@ -116,6 +117,11 @@ Modulo 7/
 ---
 
 ## Comandos de arranque (PowerShell, desde la raíz)
+**Forma rápida — script único:**
+`.\iniciar.ps1` → verifica Docker, levanta contenedores, espera a PostgreSQL con `pg_isready`,
+lanza FastAPI / NestJS / React en terminales separadas y abre el navegador cuando Vite responde en `localhost:5173`.
+
+**O manualmente, paso a paso:**
 1. **Docker**: `docker-compose up -d`  → verificar con `docker ps`
 2. **FastAPI**: `cd ml-cognitive-engine; .\.venv\Scripts\Activate.ps1; python -m uvicorn app.main:app --reload --port 8000`
 3. **NestJS**: `cd backend-nestjs; npm run start:dev`
@@ -136,7 +142,7 @@ Modulo 7/
 
 | Módulo | Estado | Notas |
 | --- | --- | --- |
-| M3 — Resolución automática de incidencias | 🚧 Parcial | 3 árboles funcionales; pendiente: prioridad M5 vs M3 y afinar clasificador |
+| M3 — Resolución automática de incidencias | ✅ Completado | 3 árboles + overrides clasificador + umbral M3 bajado a 0.45 |
 | M4 — Integración con sistemas empresariales | ❌ No iniciado | — |
 | M6 — Decisiones empresariales automatizadas | ❌ No iniciado | — |
 | M7 — Aprendizaje continuo | 🚧 Parcial | `consumidor.py` guarda eventos; scripts de reentrenamiento existen pero el pipeline de reentrenamiento automático con MLflow no está conectado |
@@ -175,25 +181,27 @@ Modulo 7/
   Datos de prueba con `seed_datos_demo.py` (42 filas, flag `--reset`). Estados de error y vacío
   manejados con `<EmptyChart />`.
   *Archivos*: `metrics.service.ts`, `MetricsPage.jsx`, `seed_datos_demo.py`.
-- **M3 — Resolución automática de incidencias**: 🚧 Parcial (Fases 1–3).
+- **M3 — Resolución automática de incidencias**: ✅ Completado (Fases 1–3).
   Flujo guiado interactivo funcional: estado en memoria (`Map<session_id, FlujoState>`) en
   `IncidenciasService`, `arboles.ts` con 3 árboles (`tarjeta_bancaria`, `fallo_tecnico`,
   `cobro_duplicado`), eventos `respuesta_guiada` / `opciones_guiadas`, botones de opciones
   en `ChatPage.jsx`. Salidas `resolver` / `escalar` (reutiliza M5) / `abandonar` verificadas
-  end-to-end (escalar y abandonar probadas vía árbol de tarjeta).
-  **⚠️ No quitar el override de tarjeta en `analyze_text` sin reemplazo verificado** — sostiene
-  el disparo del árbol de tarjeta.
-  **Pendiente 1 — clasificador**: el clasificador zero-shot BART a veces no detecta el intent
-  correcto (ej. "la app no me deja pagar" → `despedida` en vez de `fallo_tecnico`). El árbol
-  de tarjeta es el único confiable gracias al override hardcodeado. Afinar sin romper lo que
-  ya funciona queda pendiente (intento previo con frases en inglés rompió "perdí mi tarjeta",
-  se revirtió).
-  **Pendiente 2 — prioridad M5 vs M3**: para mensajes con sentimiento negativo, el escalamiento
-  M5 (`escalate_human`) se dispara antes que el árbol M3, aunque el intent sea correcto (ej.
-  "me cobraron dos veces" → `queja_cobro_duplicado` correcto, pero M5 lo tapa). El orden de
-  prioridad entre M5 y M3 queda por definir (en `chat.gateway.ts`, bloque `handleUserMessage`).
-  *Archivos*: `nlp_service.py` (override en `analyze_text`), `arboles.ts`,
-  `incidencias.service/module.ts`, `chat.gateway.ts` (handlers `user_message` + `respuesta_guiada`),
+  end-to-end. 4 casos verificados en navegador.
+  **Clasificador afinado (Fix A + Fix B)**:
+  - Fix A (`nlp_service.py`): override de keywords para `fallo_tecnico` — doble condición
+    (`keyword técnica en texto` + `top_intent == "despedida"`), mismo patrón que el override
+    de tarjeta. Keywords: `app`, `aplicacion`, `no funciona`, `se cierra`, `no carga`,
+    `sesion`, `login`, `pantalla`, `crashea`.
+  - Fix B (`incidencias.service.ts`): `CONFIDENCE_THRESHOLD` bajado de 0.65 a 0.45 —
+    permite disparar árboles cuando BART acierta el intent pero con score moderado
+    (ej. `queja_cobro_duplicado` = 0.4982, `solicitud_reembolso` = 0.5307).
+  **Prioridad M3 sobre M5**: el flag `inicioFlujo` en `chat.gateway.ts` ya garantizaba que
+  M3 toma el caso antes que M5. Lo que parecía conflicto de prioridad era el umbral alto
+  (0.65) que impedía disparar M3. Resuelto por Fix B.
+  **⚠️ No quitar los overrides de `analyze_text` sin reemplazo verificado** — sostienen el
+  disparo de los árboles de tarjeta y fallo_tecnico.
+  *Archivos*: `nlp_service.py` (2 overrides en `analyze_text`), `arboles.ts`,
+  `incidencias.service/module.ts` (umbral 0.45), `chat.gateway.ts` (flag `inicioFlujo`),
   `ChatPage.jsx` (flujoGuiado state + botones).
 - **M4 — Integración con sistemas empresariales**: ❌ No iniciado.
 - **M5 — Escalamiento inteligente a humanos**: ✅ Completado (Fases 1–3).

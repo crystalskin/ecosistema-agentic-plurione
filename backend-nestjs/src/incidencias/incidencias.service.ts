@@ -23,7 +23,7 @@ export type AccionTerminal = 'resolver' | 'escalar' | 'abandonar';
 
 @Injectable()
 export class IncidenciasService {
-  private readonly CONFIDENCE_THRESHOLD = 0.65;
+  private readonly CONFIDENCE_THRESHOLD = 0.45;
   private readonly flujosActivos = new Map<string, FlujoState>();
 
   /** Devuelve el ID del árbol cuyo trigger_intents contiene el intent dado, o null. */

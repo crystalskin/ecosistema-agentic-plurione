@@ -80,6 +80,17 @@ class NLPService:
             top_intent = "problema_tarjeta_bancaria"
             intent_confidence = 0.85
 
+        # --- CORRECCIÓN: evitar que frases técnicas caigan en "despedida" ---
+        keywords_tecnico = [
+            "app", "aplicacion", "aplicación",
+            "no funciona", "se cierra", "no carga",
+            "sesion", "sesión", "login",
+            "pantalla", "crashea",
+        ]
+        if any(k in raw_text.lower() for k in keywords_tecnico) and top_intent == "despedida":
+            top_intent = "fallo_tecnico"
+            intent_confidence = 0.82
+
         # 3. Forzar neutral si es consulta informativa
         if top_intent in ["consulta_horario", "consulta_direccion", "informacion_general"]:
             sentiment_label = "neutral"
