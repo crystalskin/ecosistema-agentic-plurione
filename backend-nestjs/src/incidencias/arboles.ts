@@ -157,4 +157,79 @@ export const ARBOLES: Record<string, Arbol> = {
     },
   },
 
+
+  cobro_duplicado: {
+    nombre: 'Cobro duplicado o reembolso',
+    trigger_intents: ['queja_cobro_duplicado', 'solicitud_reembolso'],
+    pasos: {
+
+      inicio: {
+        mensaje: '¿Con qué situación puedo ayudarte?',
+        opciones: [
+          { texto: 'Me cobraron dos veces el mismo importe', siguiente: 'confirmar_duplicado' },
+          { texto: 'Me cobraron un monto diferente al acordado', siguiente: 'importe_incorrecto' },
+          { texto: 'Quiero solicitar un reembolso por compra cancelada', siguiente: 'reembolso_cancelacion' },
+          { texto: 'Prefiero escribir libremente', accion: 'abandonar' },
+        ],
+      },
+
+      confirmar_duplicado: {
+        mensaje: '¿Cuándo ocurrió la transacción duplicada?',
+        opciones: [
+          { texto: 'Hace menos de 24 horas', siguiente: 'duplicado_reciente' },
+          { texto: 'Hace más de 24 horas', siguiente: 'duplicado_antiguo' },
+          { texto: 'Prefiero hablar con un agente', accion: 'escalar' },
+        ],
+      },
+
+      duplicado_reciente: {
+        mensaje:
+          'Los cargos duplicados recientes se revierten automáticamente en 1-3 días hábiles.\n' +
+          'Puedes verificarlo en tu estado de cuenta.\n' +
+          '¿El cargo ya fue acreditado o deseas esperar el plazo?',
+        opciones: [
+          { texto: 'Sí, esperaré el acreditamiento automático', accion: 'resolver' },
+          { texto: 'Necesito el reembolso de forma inmediata', accion: 'escalar' },
+        ],
+      },
+
+      duplicado_antiguo: {
+        mensaje:
+          'Han pasado más de 24 horas. Para gestionar el reembolso:\n' +
+          '1. Toma nota del importe y fecha de ambos cargos\n' +
+          '2. Llama al 800-123-4567 con ese detalle\n' +
+          'El ajuste se realiza en un máximo de 5 días hábiles.\n' +
+          '¿Pudiste iniciar la gestión?',
+        opciones: [
+          { texto: 'Sí, ya inicié el proceso', accion: 'resolver' },
+          { texto: 'Necesito que un agente lo gestione por mí', accion: 'escalar' },
+        ],
+      },
+
+      importe_incorrecto: {
+        mensaje:
+          'Para aclaraciones de cobro incorrecto el plazo es de 5 días hábiles.\n' +
+          'Guarda tu comprobante de pago y llama al 800-123-4567 citando la referencia.\n' +
+          '¿Necesitas algo más?',
+        opciones: [
+          { texto: 'Entendido, procederé así', accion: 'resolver' },
+          { texto: 'Quiero hablar con un agente ahora', accion: 'escalar' },
+        ],
+      },
+
+      reembolso_cancelacion: {
+        mensaje:
+          'El reembolso por compra cancelada se procesa en 3-7 días hábiles dependiendo\n' +
+          'de tu banco. Si ya pasó ese plazo sin acreditamiento, podemos escalar el caso.\n' +
+          '¿Está dentro del plazo o ya venció?',
+        opciones: [
+          { texto: 'Está dentro del plazo, esperaré', accion: 'resolver' },
+          { texto: 'El plazo ya venció y no he recibido el reembolso', accion: 'escalar' },
+          { texto: 'Prefiero escribir libremente', accion: 'abandonar' },
+        ],
+      },
+
+    },
+  },
+
 };

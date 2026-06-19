@@ -136,7 +136,7 @@ Modulo 7/
 
 | Módulo | Estado | Notas |
 | --- | --- | --- |
-| M3 — Resolución automática de incidencias | 🚧 Parcial | Flujo guiado funcional; clasificador de intención pendiente de afinar |
+| M3 — Resolución automática de incidencias | 🚧 Parcial | 3 árboles funcionales; pendiente: prioridad M5 vs M3 y afinar clasificador |
 | M4 — Integración con sistemas empresariales | ❌ No iniciado | — |
 | M6 — Decisiones empresariales automatizadas | ❌ No iniciado | — |
 | M7 — Aprendizaje continuo | 🚧 Parcial | `consumidor.py` guarda eventos; scripts de reentrenamiento existen pero el pipeline de reentrenamiento automático con MLflow no está conectado |
@@ -175,19 +175,23 @@ Modulo 7/
   Datos de prueba con `seed_datos_demo.py` (42 filas, flag `--reset`). Estados de error y vacío
   manejados con `<EmptyChart />`.
   *Archivos*: `metrics.service.ts`, `MetricsPage.jsx`, `seed_datos_demo.py`.
-- **M3 — Resolución automática de incidencias**: 🚧 Parcial (Fases 1–2).
+- **M3 — Resolución automática de incidencias**: 🚧 Parcial (Fases 1–3).
   Flujo guiado interactivo funcional: estado en memoria (`Map<session_id, FlujoState>`) en
-  `IncidenciasService`, `arboles.ts` con árboles `tarjeta_bancaria` y `fallo_tecnico`,
-  eventos `respuesta_guiada` / `opciones_guiadas`, botones de opciones en `ChatPage.jsx`,
-  salidas `resolver` / `escalar` (reutiliza M5) / `abandonar`. El árbol de tarjeta navega
-  completo y verificado end-to-end.
-  **Pendiente**: el clasificador zero-shot BART a veces no detecta el intent que dispara
-  los árboles (ej. "la app no me deja pagar" cae en `reembolso`/`despedida` en vez de
-  `fallo_tecnico`). El árbol de tarjeta funciona gracias a un override hardcodeado en
-  `analyze_text`. Afinar el clasificador sin romper casos que ya funcionan queda pendiente
-  (intento de frases descriptivas en inglés rompió "perdí mi tarjeta", se revirtió).
+  `IncidenciasService`, `arboles.ts` con 3 árboles (`tarjeta_bancaria`, `fallo_tecnico`,
+  `cobro_duplicado`), eventos `respuesta_guiada` / `opciones_guiadas`, botones de opciones
+  en `ChatPage.jsx`. Salidas `resolver` / `escalar` (reutiliza M5) / `abandonar` verificadas
+  end-to-end (escalar y abandonar probadas vía árbol de tarjeta).
   **⚠️ No quitar el override de tarjeta en `analyze_text` sin reemplazo verificado** — sostiene
   el disparo del árbol de tarjeta.
+  **Pendiente 1 — clasificador**: el clasificador zero-shot BART a veces no detecta el intent
+  correcto (ej. "la app no me deja pagar" → `despedida` en vez de `fallo_tecnico`). El árbol
+  de tarjeta es el único confiable gracias al override hardcodeado. Afinar sin romper lo que
+  ya funciona queda pendiente (intento previo con frases en inglés rompió "perdí mi tarjeta",
+  se revirtió).
+  **Pendiente 2 — prioridad M5 vs M3**: para mensajes con sentimiento negativo, el escalamiento
+  M5 (`escalate_human`) se dispara antes que el árbol M3, aunque el intent sea correcto (ej.
+  "me cobraron dos veces" → `queja_cobro_duplicado` correcto, pero M5 lo tapa). El orden de
+  prioridad entre M5 y M3 queda por definir (en `chat.gateway.ts`, bloque `handleUserMessage`).
   *Archivos*: `nlp_service.py` (override en `analyze_text`), `arboles.ts`,
   `incidencias.service/module.ts`, `chat.gateway.ts` (handlers `user_message` + `respuesta_guiada`),
   `ChatPage.jsx` (flujoGuiado state + botones).
