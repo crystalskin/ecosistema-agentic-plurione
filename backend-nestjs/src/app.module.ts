@@ -5,6 +5,7 @@ import { AppService } from './app.service';
 import { CognitiveModule } from './cognitive/cognitive.module';
 import { EscalamientoModule } from './escalamiento/escalamiento.module';
 import { TicketModule } from './tickets/ticket.module';
+import { IncidenciasModule } from './incidencias/incidencias.module';
 import { ChatGateway } from './chat/chat.gateway';
 
 @Module({
@@ -24,6 +25,7 @@ import { ChatGateway } from './chat/chat.gateway';
     CognitiveModule,
     EscalamientoModule,
     TicketModule,
+    IncidenciasModule,
   ],
   controllers: [AppController],
   providers: [AppService, ChatGateway],

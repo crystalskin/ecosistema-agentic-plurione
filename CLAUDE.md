@@ -132,21 +132,27 @@ Modulo 7/
 
 ---
 
-## ⚠️ TAREA ACTIVA (máxima prioridad)
-**Conectar `broker_service.py` → `consumidor.py` vía RabbitMQ.**
+## Próximos módulos (pendientes)
 
-- **Causa raíz diagnosticada**: `broker_service.py` publica en un *topic exchange* llamado
+| Módulo | Estado | Notas |
+| --- | --- | --- |
+| M3 — Resolución automática de incidencias | ❌ No iniciado | — |
+| M4 — Integración con sistemas empresariales | ❌ No iniciado | — |
+| M6 — Decisiones empresariales automatizadas | ❌ No iniciado | — |
+| M7 — Aprendizaje continuo | 🚧 Parcial | `consumidor.py` guarda eventos; scripts de reentrenamiento existen pero el pipeline de reentrenamiento automático con MLflow no está conectado |
+| M9 — Alta disponibilidad | ❌ No iniciado | — |
+
+---
+
+## Historial: bug resuelto — RabbitMQ exchange/binding (M1)
+**Resuelto. El chat funciona end-to-end. Se deja como referencia.**
+
+- **Causa raíz (histórica)**: `broker_service.py` publicaba en un *topic exchange* llamado
   `agentic_exchange` con routing key `cognicion.evaluada`, pero el `consumidor.py` original
-  **nunca declaraba el exchange ni hacía bind de la cola** → RabbitMQ descarta el mensaje
+  **nunca declaraba el exchange ni hacía bind de la cola** → RabbitMQ descartaba el mensaje
   en silencio (sin lanzar error).
-- **Fix**: en el consumidor, añadir `exchange_declare()`, `queue_declare()` y `queue_bind()`
-  con binding key `cognicion.#`.
-- **Verificar SIN FALLA antes de probar**: posible desajuste de nombre de campo.
-  `broker_service.py` referencia `event.event_id`, mientras que `consumidor.py` inserta el
-  PRIMARY KEY usando `datos.get('id_interaccion')`. Si no coinciden, la inserción mete un
-  **NULL silencioso**. Confirmar contra el modelo Pydantic `CognizeEvent` en
-  `ml-cognitive-engine/app/models/schemas.py`.
-- **Pendiente**: prueba end-to-end una vez que Docker esté corriendo.
+- **Fix aplicado**: en el consumidor, se añadieron `exchange_declare()`, `queue_declare()` y
+  `queue_bind()` con binding key `cognicion.#`.
 
 ### Principios aprendidos (event-driven)
 - Los *topic exchanges* de RabbitMQ requieren `exchange_declare()` + `queue_declare()` +
@@ -163,11 +169,12 @@ Modulo 7/
 - **M1 — Agente conversacional**: ✅ Completado y verificado end-to-end.
   Flujo operativo: React → WebSocket (`chat.gateway.ts`) → NestJS → FastAPI → RabbitMQ → `consumidor.py`.
   Sistema híbrido RAG + plantillas con shortcircuit (FAQ ~0.065 s, NLP completo ~1.2 s). Sin alucinaciones.
-- **M2 — Dashboard de métricas**: 🚧 En progreso. Endpoint `GET /api/cognitive/metrics` y
-  `MetricsPage.jsx` (Recharts) creados, pero `MetricsService` aún no probado con datos reales.
-  *Pendiente*: verificar `MetricsService` contra la entidad `CognizeEventEntity`; ajustar
-  nombres de columnas (`sentiment`, `intent`, `intent_confidence`); probar el endpoint en
-  `http://localhost:3000/api/cognitive/metrics`; revisar logs de NestJS si da error 500.
+- **M2 — Dashboard de métricas**: ✅ Completado.
+  Endpoint `GET /api/cognitive/metrics` operativo. `MetricsPage.jsx` (Recharts)
+  con KPI cards, PieChart (sentimientos), BarChart (intenciones) y tabla de últimas interacciones.
+  Datos de prueba con `seed_datos_demo.py` (42 filas, flag `--reset`). Estados de error y vacío
+  manejados con `<EmptyChart />`.
+  *Archivos*: `metrics.service.ts`, `MetricsPage.jsx`, `seed_datos_demo.py`.
 - **M3 — Resolución automática de incidencias**: ❌ No iniciado.
 - **M4 — Integración con sistemas empresariales**: ❌ No iniciado.
 - **M5 — Escalamiento inteligente a humanos**: ✅ Completado (Fases 1–3).
@@ -184,7 +191,15 @@ Modulo 7/
   `logs_interacciones`. Scripts de reentrenamiento existen pero no automatizados en el pipeline.
 - **M8 — Análisis de sentimiento en tiempo real**: ✅ Integrado en `nlp_service.py`.
 - **M9 — Alta disponibilidad**: ❌ No iniciado.
-- **M10 — Clasificación de tickets**: ❌ No iniciado.
+- **M10 — Clasificación de tickets**: ✅ Completado (Fases 1–2).
+  Clasificador zero-shot BART reutilizado de `nlp_service.py` con etiquetas descriptivas en inglés.
+  Prioridad derivada de la categoría (determinista, sin BERT). Techo de precisión ~80% con zero-shot sin entrenar.
+  Categorías: `facturacion`, `soporte_tecnico`, `cuenta_acceso`, `tarjeta_bancaria`, `estado_pedido`,
+  `queja_general`, `informacion_general`, `otros`. Prioridades: alta / media / baja.
+  Respuesta: `{ categoria, confianza, prioridad }`.
+  BD: tabla `tickets_clasificados` (TypeORM, `@CreateDateColumn`, sin timestamptz).
+  *Archivos*: `nlp_service.py` (método `clasificar_ticket`), `routes.py` (`POST /api/v1/clasificar-ticket`),
+  `tickets/ticket.entity/service/module/controller.ts`, `app.module.ts`.
 
 ---
 
