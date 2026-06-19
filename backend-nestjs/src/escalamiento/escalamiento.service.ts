@@ -11,6 +11,12 @@ export class EscalamientoService {
     private readonly repo: Repository<EscalamientoEntity>,
   ) {}
 
+  async obtenerResumen() {
+    const total      = await this.repo.count();
+    const pendientes = await this.repo.count({ where: { estado: 'pendiente' } });
+    return { total, pendientes, atendidos: total - pendientes };
+  }
+
   async registrar(
     session_id: string,
     raw_text: string,

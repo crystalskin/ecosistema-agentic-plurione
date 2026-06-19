@@ -11,6 +11,33 @@ export class TicketService {
     private readonly repo: Repository<TicketEntity>,
   ) {}
 
+  async obtenerMetricas() {
+    const total   = await this.repo.count();
+    const abiertos = await this.repo.count({ where: { estado: 'abierto' } });
+
+    const porCategoria = await this.repo
+      .createQueryBuilder('t')
+      .select('t.categoria', 'categoria')
+      .addSelect('COUNT(*)', 'total')
+      .groupBy('t.categoria')
+      .orderBy('total', 'DESC')
+      .getRawMany();
+
+    const porPrioridad = await this.repo
+      .createQueryBuilder('t')
+      .select('t.prioridad', 'prioridad')
+      .addSelect('COUNT(*)', 'total')
+      .groupBy('t.prioridad')
+      .getRawMany();
+
+    return {
+      total,
+      abiertos,
+      porCategoria: porCategoria.map(r => ({ categoria: r.categoria, count: parseInt(r.total, 10) })),
+      porPrioridad: porPrioridad.map(r => ({ prioridad: r.prioridad, count: parseInt(r.total, 10) })),
+    };
+  }
+
   async clasificarYGuardar(texto: string): Promise<TicketEntity> {
     const res = await fetch('http://localhost:8000/api/v1/clasificar-ticket', {
       method: 'POST',
