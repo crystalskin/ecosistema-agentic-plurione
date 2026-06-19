@@ -25,6 +25,22 @@ export class EscalamientoService {
       emotion,
       estado: 'pendiente',
     });
-    return this.repo.save(registro);
+    const saved = await this.repo.save(registro);
+
+    // Publicar en RabbitMQ vía FastAPI (best-effort: fallo aquí no cancela el registro en BD)
+    try {
+      const res = await fetch('http://localhost:8000/api/v1/escalate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id, raw_text, emotion, sentiment_score }),
+      });
+      if (!res.ok) {
+        console.warn(`[EscalamientoService] FastAPI /escalate respondió ${res.status}`);
+      }
+    } catch (e) {
+      console.warn('[EscalamientoService] No se pudo publicar en RabbitMQ:', e);
+    }
+
+    return saved;
   }
 }

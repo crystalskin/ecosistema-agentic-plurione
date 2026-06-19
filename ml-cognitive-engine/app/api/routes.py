@@ -1,4 +1,6 @@
 import time
+import uuid as uuid_lib
+from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException
 from app.models.schemas import CognizeEvent, MetadataData
 from app.services.nlp_service import nlp_service
@@ -47,3 +49,21 @@ def process_cognize_event(text: str, session_id: str):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error en el motor de IA: {str(e)}")
+
+
+@router.post("/escalate")
+def publicar_escalamiento(body: dict):
+    try:
+        payload = {
+            "event_id": str(uuid_lib.uuid4()),
+            "event_type": "escalamiento_solicitado",
+            "session_id": body.get("session_id"),
+            "raw_text": body.get("raw_text"),
+            "emotion": body.get("emotion"),
+            "sentiment_score": body.get("sentiment_score"),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        broker_service.publish_escalamiento_event(payload)
+        return {"status": "publicado", "routing_key": "escalamiento.solicitado"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al publicar escalamiento: {str(e)}")
