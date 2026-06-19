@@ -170,13 +170,15 @@ Modulo 7/
   `http://localhost:3000/api/cognitive/metrics`; revisar logs de NestJS si da error 500.
 - **M3 — Resolución automática de incidencias**: ❌ No iniciado.
 - **M4 — Integración con sistemas empresariales**: ❌ No iniciado.
-- **M5 — Escalamiento inteligente a humanos**: ❌ Diseñado, no programado.
-  *Flujo*: en `chat.gateway.ts`, tras la respuesta de FastAPI, si
-  `sentiment.label === 'negative'` y (`emotion === 'frustracion'` o `score > 0.8`) →
-  emitir `escalate_human` al frontend → `ChatPage.jsx` muestra botón "Hablar con un agente"
-  → al pulsar emite `request_human` (publica en RabbitMQ / detiene la conversación automática
-  / opcional: notifica a tickets o correo).
-  *Archivos*: `backend-nestjs/src/chat/chat.gateway.ts`, `frontend-chat/src/pages/ChatPage.jsx`.
+- **M5 — Escalamiento inteligente a humanos**: ✅ Completado (Fases 1–3).
+  Disparador: `sentiment.label === 'negative'` && (`emotion === 'frustracion'` || `score > 0.8`).
+  Flujo verificado: `chat.gateway.ts` emite `escalate_human` → `ChatPage.jsx` muestra botón
+  "Hablar con un agente" + opción "Continuar con el bot" → al pulsar emite `request_human` →
+  gateway guarda en BD (`solicitudes_escalamiento`, estado `pendiente`) y publica en RabbitMQ
+  (`agentic_exchange`, routing key `escalamiento.solicitado`, cola durable `escalamiento_cola`).
+  El bot se detiene para esa sesión. El shortcircuit RAG nunca dispara escalamiento (retorna `neutral`).
+  *Archivos*: `chat.gateway.ts`, `ChatPage.jsx`, `escalamiento.entity/service/module.ts`,
+  `broker_service.py`, `routes.py` (`/api/v1/escalate`).
 - **M6 — Decisiones empresariales automatizadas**: ❌ No iniciado.
 - **M7 — Aprendizaje continuo**: ✅ El consumidor recibe eventos y guarda en
   `logs_interacciones`. Scripts de reentrenamiento existen pero no automatizados en el pipeline.

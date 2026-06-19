@@ -67,3 +67,15 @@ def publicar_escalamiento(body: dict):
         return {"status": "publicado", "routing_key": "escalamiento.solicitado"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al publicar escalamiento: {str(e)}")
+
+
+@router.post("/clasificar-ticket")
+def clasificar_ticket(body: dict):
+    texto = (body.get("texto") or "").strip()
+    if not texto:
+        raise HTTPException(status_code=422, detail="El campo 'texto' es obligatorio.")
+    try:
+        resultado = nlp_service.clasificar_ticket(texto)
+        return resultado
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al clasificar ticket: {str(e)}")

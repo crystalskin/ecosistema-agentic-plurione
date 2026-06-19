@@ -116,4 +116,45 @@ class NLPService:
             generated_response=response
         )
 
+    def clasificar_ticket(self, texto: str) -> dict:
+        """Categoría via BART (frases descriptivas en inglés) + prioridad por categoría."""
+
+        # Frases descriptivas en inglés → mejor precisión en BART (modelo inglés)
+        # El texto de entrada puede ser español — el NLI mapea semánticamente igual
+        MAPA_ETIQUETAS = {
+            "charged twice, double charge, billing error, wrong amount billed, invoice issue, or refund request": "facturacion",
+            "technical issue, app not working, system failure, or payment error":  "soporte_tecnico",
+            "login problem, password reset, blocked account, or access issue":     "cuenta_acceso",
+            "lost, stolen, or blocked card, or request for a new card":            "tarjeta_bancaria",
+            "order tracking, delivery status, or shipment inquiry":                "estado_pedido",
+            "complaint about poor service or negative customer experience":        "queja_general",
+            "asking about business hours, opening times, schedules, branch location, or address": "informacion_general",
+            "other request not classified above":                                  "otros",
+        }
+
+        # Prioridad determinista por categoría — más fiable que BERT en texto de soporte
+        PRIORIDAD_CATEGORIA = {
+            "facturacion":         "alta",
+            "tarjeta_bancaria":    "alta",
+            "queja_general":       "alta",
+            "soporte_tecnico":     "media",
+            "cuenta_acceso":       "media",
+            "estado_pedido":       "media",
+            "informacion_general": "baja",
+            "otros":               "baja",
+        }
+
+        etiquetas = list(MAPA_ETIQUETAS.keys())
+        resultado = self.intent_classifier(texto, etiquetas)
+        etiqueta_ganadora = resultado['labels'][0]
+        categoria = MAPA_ETIQUETAS[etiqueta_ganadora]
+        confianza = round(resultado['scores'][0], 4)
+        prioridad = PRIORIDAD_CATEGORIA[categoria]
+
+        return {
+            "categoria": categoria,
+            "confianza": confianza,
+            "prioridad": prioridad,
+        }
+
 nlp_service = NLPService()
