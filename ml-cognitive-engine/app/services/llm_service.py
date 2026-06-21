@@ -1,14 +1,20 @@
 import time
 from app.services.retriever_service import retriever_service
+from app.services import ollama_service
 
 class LLMService:
     """
-    Servicio híbrido: usa el RAG como fuente de verdad y plantillas
-    empáticas cuando no hay información en la base de conocimiento.
+    Servicio híbrido: genera respuestas con Qwen2.5-7B (Ollama) cuando hay
+    contexto RAG verificado, y usa plantillas para quejas/escalamiento/casos
+    sin FAQ — así se evitan alucinaciones en respuestas críticas.
     """
 
     def __init__(self):
-        print("[HybridAgent] Modo híbrido activado (RAG + plantillas).")
+        ollama_ok = ollama_service.verificar_conexion()
+        if ollama_ok:
+            print(f"[HybridAgent] Ollama activo → generativo para intents informativos ({ollama_service.OLLAMA_MODEL}).")
+        else:
+            print("[HybridAgent] Ollama no disponible → modo plantillas (fallback completo).")
 
     def generate_response(self, raw_text: str, intent: str, sentiment: str) -> str:
         # 1. Buscar en el FAQ con umbral más bajo (0.3)
@@ -23,8 +29,16 @@ class LLMService:
             "consulta_estado_orden"
         ]
 
-        # 3. Solo usar FAQ si la intención es informativa Y el score es decente
+        # 3. Intent informativo + FAQ encontrado → generativo anclado al FAQ
         if intent in intenciones_informativas and faq_answer and score >= 0.3:
+            t_llm0 = time.perf_counter()
+            respuesta = ollama_service.generar_respuesta_con_contexto(raw_text, faq_answer)
+            t_llm1 = time.perf_counter()
+            if respuesta:
+                print(f"[TIMING LLM] ollama_gen={t_llm1-t_llm0:.3f}s")
+                return respuesta
+            # Ollama no disponible: plantilla de respaldo (sin cambio de comportamiento)
+            print("[LLMService] Ollama sin respuesta → plantilla de respaldo.")
             if "horario" in intent or "hora" in faq_answer.lower():
                 return f"¡Claro! {faq_answer} ¿Te puedo ayudar en algo más?"
             elif "dirección" in intent or "direccion" in intent or "ubicado" in faq_answer.lower():
