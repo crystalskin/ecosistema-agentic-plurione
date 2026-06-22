@@ -1,6 +1,6 @@
 {
   "best_global_step": 50,
-  "best_metric": 0.16307431390687635,
+  "best_metric": 0.16086239058688478,
   "best_model_checkpoint": "./resultados_ac06\\checkpoint-50",
   "epoch": 1.0,
   "eval_steps": 500,
@@ -11,52 +11,52 @@
   "log_history": [
     {
       "epoch": 0.2,
-      "grad_norm": 2.655677556991577,
+      "grad_norm": 2.6764590740203857,
       "learning_rate": 0.00012,
-      "loss": 2.08839111328125,
+      "loss": 2.088389015197754,
       "step": 10
     },
     {
       "epoch": 0.4,
-      "grad_norm": 2.705979824066162,
+      "grad_norm": 2.692534923553467,
       "learning_rate": 0.00019956707906498044,
-      "loss": 2.0619232177734377,
+      "loss": 2.0692787170410156,
       "step": 20
     },
     {
       "epoch": 0.6,
-      "grad_norm": 2.98089599609375,
+      "grad_norm": 2.872854232788086,
       "learning_rate": 0.00019473966425143292,
-      "loss": 2.05706672668457,
+      "loss": 2.066154670715332,
       "step": 30
     },
     {
       "epoch": 0.8,
-      "grad_norm": 2.5039286613464355,
+      "grad_norm": 2.4916186332702637,
       "learning_rate": 0.0001848048096156426,
-      "loss": 2.009202575683594,
+      "loss": 2.027507781982422,
       "step": 40
     },
     {
       "epoch": 1.0,
-      "grad_norm": 3.123943567276001,
+      "grad_norm": 2.8182570934295654,
       "learning_rate": 0.0001702981057425662,
-      "loss": 1.9651887893676758,
+      "loss": 1.966404914855957,
       "step": 50
     },
     {
       "epoch": 1.0,
       "eval_accuracy": 0.23,
-      "eval_f1_macro": 0.16307431390687635,
-      "eval_f1_weighted": 0.17487018193031148,
-      "eval_loss": 1.8928463459014893,
-      "eval_precision_macro": 0.2682926829268293,
-      "eval_precision_weighted": 0.28756097560975613,
+      "eval_f1_macro": 0.16086239058688478,
+      "eval_f1_weighted": 0.17274673554311953,
+      "eval_loss": 1.903190016746521,
+      "eval_precision_macro": 0.26685393258426965,
+      "eval_precision_weighted": 0.2861797752808989,
       "eval_recall_macro": 0.22458791208791207,
       "eval_recall_weighted": 0.23,
-      "eval_runtime": 0.4506,
-      "eval_samples_per_second": 221.903,
-      "eval_steps_per_second": 28.847,
+      "eval_runtime": 0.4266,
+      "eval_samples_per_second": 234.387,
+      "eval_steps_per_second": 30.47,
       "step": 50
     }
   ],

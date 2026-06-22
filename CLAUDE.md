@@ -154,7 +154,7 @@ lanza FastAPI / NestJS / React en terminales separadas y abre el navegador cuand
 | M3 — Resolución automática de incidencias | ✅ Completado | 3 árboles + overrides clasificador + umbral M3 bajado a 0.45 |
 | M4 — Integración con sistemas empresariales | ❌ No iniciado | — |
 | M6 — Decisiones empresariales automatizadas | ❌ No iniciado | — |
-| M7 — Aprendizaje continuo | 🚧 Parcial | `consumidor.py` guarda eventos; scripts de reentrenamiento existen pero el pipeline de reentrenamiento automático con MLflow no está conectado |
+| M7 — Aprendizaje continuo | ✅ Verificado | Pipeline AC-06 + AC-08 verificado de punta a punta (2026-06-22). Automatización completa (consumidor → disparo) pendiente de conectar |
 | M9 — Alta disponibilidad | ❌ No iniciado | — |
 
 ---
@@ -228,8 +228,20 @@ lanza FastAPI / NestJS / React en terminales separadas y abre el navegador cuand
   *Archivos*: `chat.gateway.ts`, `ChatPage.jsx`, `escalamiento.entity/service/module.ts`,
   `broker_service.py`, `routes.py` (`/api/v1/escalate`).
 - **M6 — Decisiones empresariales automatizadas**: ❌ No iniciado.
-- **M7 — Aprendizaje continuo**: ✅ El consumidor recibe eventos y guarda en
-  `logs_interacciones`. Scripts de reentrenamiento existen pero no automatizados en el pipeline.
+- **M7 — Aprendizaje continuo**: ✅ Verificado de punta a punta (2026-06-22).
+  `consumidor.py` guarda eventos en `logs_interacciones`. Pipeline de reentrenamiento
+  funcional: AC-06 (`entrenamiento_ac06.py`) entrena LoRA fino sobre DistilBERT (r=8,
+  alpha=16, 8 labels), registra run en MLflow con tag `status=candidato` y guarda ZIP en
+  `modelos_storage/`. AC-08 (`validacion_rollback_ac08.py`) compara candidato vs activo por
+  F1 macro y promueve o rechaza automáticamente.
+  Verificado hoy: candidato (run `4c8ef5ae`, F1 0.76) RECHAZADO por ser peor que el activo
+  (F1 0.82) — la protección automática funciona correctamente.
+  **Matices para defensa**: (1) datos de entrenamiento son sintéticos (`datasets_ac05`), no
+  interacciones reales del consumidor; (2) el modelo fine-tuned (8 labels) es un clasificador
+  paralelo experimental — **no reemplaza al BART zero-shot de producción** (10 labels).
+  Pendiente: conectar consumidor → disparo automático de reentrenamiento por umbral.
+  *Scripts*: `entrenamiento_ac06.py`, `validacion_rollback_ac08.py`, `generador_dataset.py`,
+  `consumidor.py`. MLflow en `localhost:5000`.
 - **M8 — Análisis de sentimiento en tiempo real**: ✅ Integrado en `nlp_service.py`.
 - **M9 — Alta disponibilidad**: ❌ No iniciado.
 - **M10 — Clasificación de tickets**: ✅ Completado (Fases 1–2).
