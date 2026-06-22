@@ -55,9 +55,25 @@ function getMsgStyle(sender) {
   }
 }
 
+const newMsg = (text, sender) => ({ text, sender, ts: new Date() });
+
+function formatTime(ts) {
+  return ts.toLocaleTimeString('es-MX', { hour: 'numeric', minute: '2-digit', hour12: true });
+}
+
+function getTsStyle(sender) {
+  return {
+    marginTop: '4px',
+    fontSize: '0.68rem',
+    lineHeight: 1,
+    color: sender === 'user' ? 'rgba(255,255,255,0.58)' : '#bdbdbd',
+    textAlign: 'right',
+  };
+}
+
 function ChatPage() {
   const [messages, setMessages] = useState([
-    { text: "Conectando con el agente...", sender: 'system' }
+    newMsg("Conectando con el agente...", 'system')
   ]);
   const [input, setInput] = useState('');
   const [showEscalate, setShowEscalate] = useState(false);
@@ -66,6 +82,7 @@ function ChatPage() {
   const [flujoGuiado, setFlujoGuiado] = useState(null);
   const [botEscribiendo, setBotEscribiendo] = useState(false);
   const chatBoxRef = useRef(null);
+  const inputRef = useRef(null);
   const socketRef = useRef(null);
 
   useEffect(() => {
@@ -73,7 +90,7 @@ function ChatPage() {
     const socket = socketRef.current;
 
     socket.on("connect", () => {
-      setMessages(prev => [...prev, { text: "🟢 Agente conectado. ¿En qué te puedo ayudar?", sender: 'system' }]);
+      setMessages(prev => [...prev, newMsg("🟢 Agente conectado. ¿En qué te puedo ayudar?", 'system')]);
     });
 
     socket.on("ai_response", (data) => {
@@ -83,8 +100,8 @@ function ChatPage() {
         const respuestaBot = data.data.payload.generated_response;
         setMessages(prev => [
           ...prev,
-          { text: `🧠 ${pensamiento}`, sender: 'ai-think' },
-          { text: `🤖 ${respuestaBot}`, sender: 'ai' }
+          newMsg(`🧠 ${pensamiento}`, 'ai-think'),
+          newMsg(`🤖 ${respuestaBot}`, 'ai'),
         ]);
       }
     });
@@ -95,24 +112,18 @@ function ChatPage() {
       setFlujoGuiado(null);
       setEscalateContext(data);
       setShowEscalate(true);
-      setMessages(prev => [...prev, {
-        text: "🔴 Detectamos que necesitas asistencia adicional. ¿Deseas hablar con un agente humano?",
-        sender: 'system'
-      }]);
+      setMessages(prev => [...prev, newMsg("🔴 Detectamos que necesitas asistencia adicional. ¿Deseas hablar con un agente humano?", 'system')]);
     });
 
     socket.on("transfer_confirmed", (data) => {
       setBotEscribiendo(false);
-      setMessages(prev => [...prev, { text: `✅ ${data.message}`, sender: 'system' }]);
+      setMessages(prev => [...prev, newMsg(`✅ ${data.message}`, 'system')]);
     });
 
     // M3: servidor ofrece opciones guiadas
     socket.on("opciones_guiadas", (data) => {
       setBotEscribiendo(false);
-      setMessages(prev => [...prev, {
-        text: `🔧 ${data.mensaje}`,
-        sender: 'ai'
-      }]);
+      setMessages(prev => [...prev, newMsg(`🔧 ${data.mensaje}`, 'ai')]);
       setFlujoGuiado(data);
     });
 
@@ -120,10 +131,7 @@ function ChatPage() {
     socket.on("flujo_completado", (data) => {
       setBotEscribiendo(false);
       const icon = data.resultado === 'resuelto' ? '✅' : '↩️';
-      setMessages(prev => [...prev, {
-        text: `${icon} ${data.mensaje}`,
-        sender: 'system'
-      }]);
+      setMessages(prev => [...prev, newMsg(`${icon} ${data.mensaje}`, 'system')]);
       setFlujoGuiado(null);
     });
 
@@ -151,15 +159,12 @@ function ChatPage() {
     });
     setShowEscalate(false);
     setBotActivo(false);
-    setMessages(prev => [...prev, {
-      text: "🧑‍💼 Solicitaste hablar con un agente. El bot se ha detenido.",
-      sender: 'system'
-    }]);
+    setMessages(prev => [...prev, newMsg("🧑‍💼 Solicitaste hablar con un agente. El bot se ha detenido.", 'system')]);
   };
 
   // M3: usuario eligió una opción del flujo guiado
   const handleOpcionGuiada = (opcion) => {
-    setMessages(prev => [...prev, { text: opcion.texto, sender: 'user' }]);
+    setMessages(prev => [...prev, newMsg(opcion.texto, 'user')]);
     socketRef.current.emit("respuesta_guiada", {
       session_id: "session-react-01",
       opcionTexto: opcion.texto,
@@ -171,21 +176,20 @@ function ChatPage() {
     e.preventDefault();
     if (!input.trim()) return;
     if (!botActivo) {
-      setMessages(prev => [...prev, {
-        text: "⏸️ El bot está en pausa. Esperando agente humano...",
-        sender: 'system'
-      }]);
+      setMessages(prev => [...prev, newMsg("⏸️ El bot está en pausa. Esperando agente humano...", 'system')]);
       setInput('');
+      inputRef.current?.focus();
       return;
     }
 
-    setMessages(prev => [...prev, { text: input, sender: 'user' }]);
+    setMessages(prev => [...prev, newMsg(input, 'user')]);
     socketRef.current.emit("user_message", {
       text: input,
       session_id: "session-react-01"
     });
     setInput('');
     setBotEscribiendo(true);
+    inputRef.current?.focus();
   };
 
   return (
@@ -282,6 +286,9 @@ function ChatPage() {
             .map((msg, index) => (
               <div key={index} className="msg-enter" style={getMsgStyle(msg.sender)}>
                 {msg.text}
+                {(msg.sender === 'user' || msg.sender === 'ai') && msg.ts && (
+                  <div style={getTsStyle(msg.sender)}>{formatTime(msg.ts)}</div>
+                )}
               </div>
             ))
           }
@@ -392,6 +399,7 @@ function ChatPage() {
             }}
           >
             <input
+              ref={inputRef}
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
