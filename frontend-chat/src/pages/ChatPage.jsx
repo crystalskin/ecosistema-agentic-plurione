@@ -195,6 +195,16 @@ function ChatPage() {
         0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
         30%            { transform: translateY(-5px); opacity: 1; }
       }
+      @keyframes msgEnter {
+        from { opacity: 0; transform: translateY(8px); }
+        to   { opacity: 1; transform: translateY(0);   }
+      }
+      .msg-enter {
+        animation: msgEnter 0.25s ease-out;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .msg-enter { animation: none; }
+      }
     `}</style>
     <div style={{
       minHeight: '100vh',
@@ -270,14 +280,14 @@ function ChatPage() {
           {messages
             .filter(msg => MOSTRAR_DEBUG || msg.sender !== 'ai-think')
             .map((msg, index) => (
-              <div key={index} style={getMsgStyle(msg.sender)}>
+              <div key={index} className="msg-enter" style={getMsgStyle(msg.sender)}>
                 {msg.text}
               </div>
             ))
           }
           {/* Typing indicator */}
           {botEscribiendo && (
-            <div style={{
+            <div className="msg-enter" style={{
               background: '#fff',
               boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
               alignSelf: 'flex-start',
