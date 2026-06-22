@@ -41,4 +41,15 @@ export class CognitiveService {
 
     return data;
   }
+
+  async limpiarSesion(sessionId: string): Promise<void> {
+    try {
+      await fetch(
+        `http://localhost:8000/api/v1/session/${encodeURIComponent(sessionId)}`,
+        { method: 'DELETE' },
+      );
+    } catch {
+      // silencioso — si FastAPI no responde no es crítico
+    }
+  }
 }

@@ -1,13 +1,16 @@
 import time
+from collections import deque
 from transformers import pipeline
 from app.models.schemas import PayloadData, IntentData, SentimentData
 from app.services.llm_service import llm_service
 from app.services.retriever_service import retriever_service
 
 RAG_SHORTCIRCUIT_THRESHOLD = 0.90
+MAX_TURNOS = 5  # 5 pares user+bot → hasta 10 líneas en el prompt
 
 class NLPService:
     def __init__(self):
+        self._history: dict[str, deque] = {}
         print("[NLP] Cargando modelos optimizados para español...")
         self.sentiment_analyzer = pipeline(
             "sentiment-analysis",
@@ -31,18 +34,29 @@ class NLPService:
         )
         print("[NLP] Modelos listos.")
 
+    def _get_hist(self, session_id: str) -> deque:
+        if session_id not in self._history:
+            self._history[session_id] = deque(maxlen=MAX_TURNOS)
+        return self._history[session_id]
+
+    def limpiar_sesion(self, session_id: str) -> None:
+        self._history.pop(session_id, None)
+
     def analyze_text(self, raw_text: str, session_id: str) -> PayloadData:
         t0 = time.perf_counter()
+        hist = list(self._get_hist(session_id))  # snapshot antes de modificar
 
         # CORTOCIRCUITO: si el FAQ responde con alta confianza, omite BERT + BART
         faq_rapido, rag_score = retriever_service.search(raw_text, threshold=RAG_SHORTCIRCUIT_THRESHOLD)
         if faq_rapido is not None:
+            respuesta_sc = f"¡Claro! {faq_rapido} ¿Puedo ayudarte en algo más?"
+            self._get_hist(session_id).append({"user": raw_text, "bot": respuesta_sc})
             print(f"[SHORTCIRCUIT] score={rag_score:.3f} → BERT+BART omitidos | total={time.perf_counter()-t0:.3f}s")
             return PayloadData(
                 raw_text=raw_text,
                 intent=IntentData(label="rag_directo", confidence=round(rag_score, 4)),
                 sentiment=SentimentData(label="neutral", score=round(rag_score, 4), emotion="neutral"),
-                generated_response=f"¡Claro! {faq_rapido} ¿Puedo ayudarte en algo más?",
+                generated_response=respuesta_sc,
             )
 
         # 1. Sentimiento
@@ -107,10 +121,12 @@ class NLPService:
             confidence=intent_confidence
         )
 
-        # 4. Generar respuesta (híbrida)
+        # 4. Generar respuesta (híbrida) — con historial de conversación
         t_llm0 = time.perf_counter()
-        response = llm_service.generate_response(raw_text, top_intent, sentiment_label)
+        response = llm_service.generate_response(raw_text, top_intent, sentiment_label, hist)
         t_llm1 = time.perf_counter()
+
+        self._get_hist(session_id).append({"user": raw_text, "bot": response})
 
         print(
             f"[TIMING NLP] "

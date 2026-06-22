@@ -69,6 +69,12 @@ def publicar_escalamiento(body: dict):
         raise HTTPException(status_code=500, detail=f"Error al publicar escalamiento: {str(e)}")
 
 
+@router.delete("/session/{session_id}")
+def limpiar_sesion(session_id: str):
+    nlp_service.limpiar_sesion(session_id)
+    return {"status": "ok"}
+
+
 @router.post("/clasificar-ticket")
 def clasificar_ticket(body: dict):
     texto = (body.get("texto") or "").strip()

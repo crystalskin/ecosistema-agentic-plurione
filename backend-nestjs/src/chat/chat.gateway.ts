@@ -18,6 +18,8 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   @WebSocketServer()
   server!: Server;
 
+  private readonly sessionMap = new Map<string, string>(); // socketId → sessionId
+
   constructor(
     private readonly cognitiveService: CognitiveService,
     private readonly escalamientoService: EscalamientoService,
@@ -34,6 +36,11 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
   handleDisconnect(client: Socket) {
     console.log(`[ChatGateway] Cliente desconectado: ${client.id}`);
+    const sessionId = this.sessionMap.get(client.id);
+    if (sessionId) {
+      this.cognitiveService.limpiarSesion(sessionId).catch(() => {});
+      this.sessionMap.delete(client.id);
+    }
   }
 
   @SubscribeMessage('request_human')
@@ -65,6 +72,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   ) {
     try {
       console.log(`[ChatGateway] Mensaje recibido de ${client.id}: "${body.text}"`);
+      this.sessionMap.set(client.id, body.session_id);
 
       // M3: si hay flujo guiado activo y el usuario escribe texto libre → abandonar el flujo
       if (this.incidenciasService.tieneFlujActivo(body.session_id)) {

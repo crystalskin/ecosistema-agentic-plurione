@@ -16,7 +16,9 @@ class LLMService:
         else:
             print("[HybridAgent] Ollama no disponible → modo plantillas (fallback completo).")
 
-    def generate_response(self, raw_text: str, intent: str, sentiment: str) -> str:
+    def generate_response(self, raw_text: str, intent: str, sentiment: str,
+                          history: list | None = None) -> str:
+        history = history or []
         # 1. Buscar en el FAQ con umbral más bajo (0.3)
         t_rag0 = time.perf_counter()
         faq_answer, score = retriever_service.search(raw_text, threshold=0.3)
@@ -32,7 +34,7 @@ class LLMService:
         # 3. Intent informativo + FAQ encontrado → generativo anclado al FAQ
         if intent in intenciones_informativas and faq_answer and score >= 0.3:
             t_llm0 = time.perf_counter()
-            respuesta = ollama_service.generar_respuesta_con_contexto(raw_text, faq_answer)
+            respuesta = ollama_service.generar_respuesta_con_contexto(raw_text, faq_answer, history)
             t_llm1 = time.perf_counter()
             if respuesta:
                 print(f"[TIMING LLM] ollama_gen={t_llm1-t_llm0:.3f}s")

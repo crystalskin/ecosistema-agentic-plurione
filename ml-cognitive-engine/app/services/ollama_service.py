@@ -46,13 +46,25 @@ def verificar_conexion() -> bool:
         return False
 
 
-def generar_respuesta_con_contexto(pregunta: str, contexto_faq: str) -> str | None:
+def generar_respuesta_con_contexto(
+    pregunta: str, contexto_faq: str, historial: list | None = None
+) -> str | None:
     """
     Genera una respuesta natural usando el FAQ como contexto.
+    historial: lista de dicts {"user": str, "bot": str} con los turnos recientes.
     Devuelve None si Ollama no está disponible (llm_service usará la plantilla).
     """
+    bloque_hist = ""
+    if historial:
+        lineas = []
+        for turno in historial:
+            lineas.append(f"Usuario: {turno['user']}")
+            lineas.append(f"Asistente: {turno['bot']}")
+        bloque_hist = "HISTORIAL DE CONVERSACIÓN:\n" + "\n".join(lineas) + "\n\n"
+
     prompt = (
-        f"CONTEXTO:\n{contexto_faq}\n\n"
+        f"{bloque_hist}"
+        f"CONTEXTO (información oficial):\n{contexto_faq}\n\n"
         f"PREGUNTA DEL CLIENTE:\n{pregunta}\n\n"
         f"RESPUESTA:"
     )
