@@ -27,7 +27,9 @@ propios errores. Arquitectura **Event-Driven + Microservicios**. Cubre los Módu
 ## Stack tecnológico
 - **Contenedores (Docker Desktop)**: PostgreSQL 15, RabbitMQ 3, MLflow v2.
 - **IA — Python 3.14**: FastAPI, Uvicorn, PyTorch, HuggingFace Transformers,
-  Sentence-Transformers, pika.
+  Sentence-Transformers, pika, requests.
+- **LLM generativo local**: Ollama (servicio externo, `localhost:11434`) +
+  Qwen2.5-7B corriendo en GPU RTX 4060 (verificado `100% GPU` en `ollama ps`).
 - **Gateway — Node.js 24**: NestJS, TypeORM, Socket.io, Axios.
 - **Frontend**: React 18, Vite, Socket.io-client, React-Router-DOM, Recharts.
 - **Base de datos**: PostgreSQL. Tablas: `logs_interacciones`, `cognize_events`.
@@ -46,7 +48,10 @@ propios errores. Arquitectura **Event-Driven + Microservicios**. Cubre los Módu
      se omiten `bert_sentiment` y `bart_intent` y se responde directo con el FAQ. El campo
      `intent` se marca como `"rag_directo"` (no null). Reduce consultas FAQ de ~1.3 s a
      ~0.065 s. Para scores < 0.90 se ejecuta el pipeline NLP completo.
-   - **LLM** (`llm_service`): híbrido. Si el RAG encuentra respuesta y la intención es informativa → paráfrasis con plantillas; si no → plantillas empáticas según sentimiento/intención. **Sin modelos generativos, para evitar alucinaciones.**
+   - **LLM** (`llm_service` + `ollama_service`): híbrido. Si la intención es informativa
+     y el RAG devuelve score >= 0.30 → genera respuesta natural con Qwen2.5-7B (Ollama),
+     anclada al FAQ (temperature 0.3, máx 120 tokens). Para quejas, escalamiento y casos
+     sin FAQ → plantillas. Fallback a plantilla si Ollama cae o supera 15 s de timeout.
    - **Broker** (`broker_service`): publica el evento en **RabbitMQ (5672)**.
 5. NestJS recibe la respuesta de Python, la guarda en **PostgreSQL** (si el servicio de métricas está activo) y la devuelve a React.
 6. `consumidor.py` escucha RabbitMQ, guarda las interacciones en `aprendizaje_db` y alimenta el aprendizaje continuo (Módulo 7). Reentrenamiento planeado con **MLflow (5000)**.
@@ -62,6 +67,7 @@ propios errores. Arquitectura **Event-Driven + Microservicios**. Cubre los Módu
 | RabbitMQ | 5672 (panel 15672) |
 | PostgreSQL | 5432 |
 | MLflow | 5000 |
+| Ollama (LLM local) | 11434 |
 
 ---
 
@@ -88,6 +94,7 @@ Modulo 7/
 │           ├── nlp_service.py
 │           ├── retriever_service.py
 │           ├── llm_service.py
+│           ├── ollama_service.py
 │           └── broker_service.py
 │
 ├── backend-nestjs/               # Gateway principal (Node.js)
@@ -122,6 +129,8 @@ Modulo 7/
 lanza FastAPI / NestJS / React en terminales separadas y abre el navegador cuando Vite responde en `localhost:5173`.
 
 **O manualmente, paso a paso:**
+0. **Ollama** (para LLM generativo): verificar que el servicio esté corriendo (`ollama ps`).
+   Si no está activo, FastAPI arranca en modo plantillas sin error — no es bloqueante.
 1. **Docker**: `docker-compose up -d`  → verificar con `docker ps`
 2. **FastAPI**: `cd ml-cognitive-engine; .\.venv\Scripts\Activate.ps1; python -m uvicorn app.main:app --reload --port 8000`
 3. **NestJS**: `cd backend-nestjs; npm run start:dev`
@@ -174,7 +183,12 @@ lanza FastAPI / NestJS / React en terminales separadas y abre el navegador cuand
 ## Estado de los módulos
 - **M1 — Agente conversacional**: ✅ Completado y verificado end-to-end.
   Flujo operativo: React → WebSocket (`chat.gateway.ts`) → NestJS → FastAPI → RabbitMQ → `consumidor.py`.
-  Sistema híbrido RAG + plantillas con shortcircuit (FAQ ~0.065 s, NLP completo ~1.2 s). Sin alucinaciones.
+  Sistema híbrido RAG + Qwen2.5-7B (generativo para intents informativos con contexto RAG) + plantillas
+  para quejas/escalamiento/casos sin FAQ. Shortcircuit FAQ ~0.065 s, NLP completo ~1.2 s,
+  NLP + generativo ~2–3 s. Anclaje anti-alucinación verificado: preguntas fuera del FAQ
+  no inventan datos (caen a "no tengo esa información").
+  *LLM*: `ollama_service.py` + `llm_service.py` — Qwen2.5-7B vía Ollama (localhost:11434),
+  GPU RTX 4060, temperature 0.3, máx 120 tokens, fallback a plantilla si Ollama cae.
 - **M2 — Dashboard de métricas**: ✅ Completado.
   Endpoint `GET /api/cognitive/metrics` operativo. `MetricsPage.jsx` (Recharts)
   con KPI cards, PieChart (sentimientos), BarChart (intenciones) y tabla de últimas interacciones.
@@ -227,6 +241,22 @@ lanza FastAPI / NestJS / React en terminales separadas y abre el navegador cuand
   BD: tabla `tickets_clasificados` (TypeORM, `@CreateDateColumn`, sin timestamptz).
   *Archivos*: `nlp_service.py` (método `clasificar_ticket`), `routes.py` (`POST /api/v1/clasificar-ticket`),
   `tickets/ticket.entity/service/module/controller.ts`, `app.module.ts`.
+
+---
+
+## Pendientes menores del clasificador (no urgentes)
+
+Casos borde detectados al probar el LLM generativo. Son errores del clasificador
+(`nlp_service.py`), **no del LLM**. Documentados para afinar en el futuro; no
+perseguir ahora para evitar otro ciclo de ajuste de umbrales.
+
+1. **"me cobraron de más"** no dispara el árbol de cobro (`queja_cobro_duplicado`);
+   sí funciona "me cobraron dos veces". Falta mapear esa variante semántica en el
+   clasificador o en los keywords de `nlp_service.py`.
+2. **"¿tienen sucursal en X?"** (pregunta informativa) fue clasificada como frustración
+   y disparó escalamiento M5. Error de clasificación BART. No peligroso (no inventó
+   datos), pero la experiencia de usuario es mala. Requiere override de keyword o
+   ajuste de umbral de sentimiento para consultas de ubicación.
 
 ---
 

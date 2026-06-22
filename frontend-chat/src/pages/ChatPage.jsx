@@ -12,6 +12,18 @@ const TIPO_ESTILOS = {
 // Cambiar a true para ver etiquetas del clasificador durante desarrollo
 const MOSTRAR_DEBUG = false;
 
+function dotStyle(i) {
+  return {
+    display: 'inline-block',
+    width: '7px',
+    height: '7px',
+    borderRadius: '50%',
+    background: '#43a047',
+    animation: 'typingBounce 1.2s ease-in-out infinite',
+    animationDelay: `${i * 0.2}s`,
+  };
+}
+
 function getMsgStyle(sender) {
   const base = {
     fontFamily: "'Inter','Segoe UI',system-ui,sans-serif",
@@ -52,6 +64,7 @@ function ChatPage() {
   const [botActivo, setBotActivo] = useState(true);
   const [escalateContext, setEscalateContext] = useState(null);
   const [flujoGuiado, setFlujoGuiado] = useState(null);
+  const [botEscribiendo, setBotEscribiendo] = useState(false);
   const chatBoxRef = useRef(null);
   const socketRef = useRef(null);
 
@@ -64,6 +77,7 @@ function ChatPage() {
     });
 
     socket.on("ai_response", (data) => {
+      setBotEscribiendo(false);
       if (data.status === 'success') {
         const pensamiento = `[${data.data.payload.intent.label} | ${data.data.payload.sentiment.label}]`;
         const respuestaBot = data.data.payload.generated_response;
@@ -77,6 +91,7 @@ function ChatPage() {
 
     // M5: escalamiento por frustración
     socket.on("escalate_human", (data) => {
+      setBotEscribiendo(false);
       setFlujoGuiado(null);
       setEscalateContext(data);
       setShowEscalate(true);
@@ -87,11 +102,13 @@ function ChatPage() {
     });
 
     socket.on("transfer_confirmed", (data) => {
+      setBotEscribiendo(false);
       setMessages(prev => [...prev, { text: `✅ ${data.message}`, sender: 'system' }]);
     });
 
     // M3: servidor ofrece opciones guiadas
     socket.on("opciones_guiadas", (data) => {
+      setBotEscribiendo(false);
       setMessages(prev => [...prev, {
         text: `🔧 ${data.mensaje}`,
         sender: 'ai'
@@ -101,6 +118,7 @@ function ChatPage() {
 
     // M3: flujo terminó (resuelto o abandonado)
     socket.on("flujo_completado", (data) => {
+      setBotEscribiendo(false);
       const icon = data.resultado === 'resuelto' ? '✅' : '↩️';
       setMessages(prev => [...prev, {
         text: `${icon} ${data.mensaje}`,
@@ -122,7 +140,7 @@ function ChatPage() {
 
   useEffect(() => {
     chatBoxRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, botEscribiendo]);
 
   const handleRequestHuman = () => {
     socketRef.current.emit("request_human", {
@@ -167,9 +185,17 @@ function ChatPage() {
       session_id: "session-react-01"
     });
     setInput('');
+    setBotEscribiendo(true);
   };
 
   return (
+    <>
+    <style>{`
+      @keyframes typingBounce {
+        0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+        30%            { transform: translateY(-5px); opacity: 1; }
+      }
+    `}</style>
     <div style={{
       minHeight: '100vh',
       display: 'flex',
@@ -249,6 +275,24 @@ function ChatPage() {
               </div>
             ))
           }
+          {/* Typing indicator */}
+          {botEscribiendo && (
+            <div style={{
+              background: '#fff',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+              alignSelf: 'flex-start',
+              borderRadius: '12px',
+              borderBottomLeftRadius: '3px',
+              padding: '0.6rem 1rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+            }}>
+              <span style={dotStyle(0)} />
+              <span style={dotStyle(1)} />
+              <span style={dotStyle(2)} />
+            </div>
+          )}
           <div ref={chatBoxRef} />
         </div>
 
@@ -376,6 +420,7 @@ function ChatPage() {
         )}
       </div>
     </div>
+    </>
   );
 }
 
