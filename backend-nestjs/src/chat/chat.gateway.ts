@@ -12,6 +12,7 @@ import { Server, Socket } from 'socket.io';
 import { CognitiveService } from '../cognitive/cognitive.service';
 import { EscalamientoService } from '../escalamiento/escalamiento.service';
 import { IncidenciasService } from '../incidencias/incidencias.service';
+import { TicketService } from '../tickets/ticket.service';
 
 @WebSocketGateway({ cors: { origin: '*' } })
 export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
@@ -24,6 +25,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     private readonly cognitiveService: CognitiveService,
     private readonly escalamientoService: EscalamientoService,
     private readonly incidenciasService: IncidenciasService,
+    private readonly ticketService: TicketService,
   ) {}
 
   afterInit() {
@@ -84,6 +86,30 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
       }
 
       const result = await this.cognitiveService.procesarYGuardar(body.text, body.session_id);
+
+      // M4: consulta de ticket por folio — interceptar antes de M3/M5
+      const folio: string | undefined = result?.payload?.folio;
+      if (result?.payload?.intent?.label === 'consulta_estado_ticket' && folio) {
+        const ticket = await this.ticketService.buscarPorFolio(folio);
+        let respuesta: string;
+        if (ticket) {
+          respuesta =
+            `Ticket ${ticket.folio} — Estado: ${ticket.estado} | ` +
+            `Categoría: ${ticket.categoria} | Prioridad: ${ticket.prioridad} | ` +
+            `Creado: ${ticket.created_at.toLocaleDateString('es-MX')}`;
+        } else {
+          respuesta =
+            `No encontré ningún ticket con folio ${folio}. ` +
+            `¿Puedes verificar el número? El formato es TK-00042.`;
+        }
+        console.log(`[ChatGateway] Consulta folio=${folio} | encontrado=${!!ticket}`);
+        client.emit('ai_response', {
+          status: 'success',
+          data: { ...result, payload: { ...result.payload, generated_response: respuesta } },
+        });
+        return;
+      }
+
       client.emit('ai_response', { status: 'success', data: result });
 
       const intent = result?.payload?.intent?.label;

@@ -20,6 +20,9 @@ export class TicketEntity {
   @Column({ default: 'abierto' })
   estado: string;
 
+  @Column({ nullable: true, unique: true })
+  folio: string;
+
   @CreateDateColumn()
   created_at: Date;
 }

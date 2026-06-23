@@ -19,6 +19,7 @@ class PayloadData(BaseModel):
     intent: IntentData
     sentiment: SentimentData
     generated_response: Optional[str] = Field(None, description="Respuesta generada por el LLM")
+    folio: Optional[str] = Field(None, description="Folio de ticket detectado (TK-XXXXX)")
 
 class MetadataData(BaseModel):
     model_intent_version: str = Field(..., description="Ej: intent-v1")

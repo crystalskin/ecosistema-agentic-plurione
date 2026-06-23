@@ -1,9 +1,12 @@
+import re
 import time
 from collections import deque
 from transformers import pipeline
 from app.models.schemas import PayloadData, IntentData, SentimentData
 from app.services.llm_service import llm_service
 from app.services.retriever_service import retriever_service
+
+_FOLIO_RE = re.compile(r'\bTK-\d{4,6}\b', re.IGNORECASE)
 
 RAG_SHORTCIRCUIT_THRESHOLD = 0.90
 MAX_TURNOS = 5  # 5 pares user+bot → hasta 10 líneas en el prompt
@@ -45,6 +48,21 @@ class NLPService:
     def analyze_text(self, raw_text: str, session_id: str) -> PayloadData:
         t0 = time.perf_counter()
         hist = list(self._get_hist(session_id))  # snapshot antes de modificar
+
+        # CORTOCIRCUITO: folio de ticket detectado → NestJS hará el SELECT
+        folio_match = _FOLIO_RE.search(raw_text)
+        if folio_match:
+            folio = folio_match.group(0).upper()
+            respuesta_sc = f"Consultando el estado de tu ticket {folio}..."
+            self._get_hist(session_id).append({"user": raw_text, "bot": respuesta_sc})
+            print(f"[FOLIO] Detectado {folio} → intent=consulta_estado_ticket | total={time.perf_counter()-t0:.3f}s")
+            return PayloadData(
+                raw_text=raw_text,
+                intent=IntentData(label="consulta_estado_ticket", confidence=0.99),
+                sentiment=SentimentData(label="neutral", score=1.0, emotion="neutral"),
+                generated_response=respuesta_sc,
+                folio=folio,
+            )
 
         # CORTOCIRCUITO: si el FAQ responde con alta confianza, omite BERT + BART
         faq_rapido, rag_score = retriever_service.search(raw_text, threshold=RAG_SHORTCIRCUIT_THRESHOLD)
