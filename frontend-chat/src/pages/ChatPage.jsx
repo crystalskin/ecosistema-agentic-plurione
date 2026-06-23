@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import io from 'socket.io-client';
 
 // Colores de botones según el tipo de opción del flujo guiado
@@ -80,10 +80,34 @@ function ChatPage() {
   const [botActivo, setBotActivo] = useState(true);
   const [escalateContext, setEscalateContext] = useState(null);
   const [flujoGuiado, setFlujoGuiado] = useState(null);
-  const [botEscribiendo, setBotEscribiendo] = useState(false);
-  const chatBoxRef = useRef(null);
-  const inputRef = useRef(null);
-  const socketRef = useRef(null);
+  const [botEscribiendo, setBotEscribiendo]             = useState(false);
+  const [showInactivityWarning, setShowInactivityWarning] = useState(false);
+  const [isInactive, setIsInactive]                       = useState(false);
+  const [isConnected, setIsConnected]                     = useState(false);
+  const chatBoxRef      = useRef(null);
+  const inputRef        = useRef(null);
+  const socketRef       = useRef(null);
+  const warningTimerRef = useRef(null);   // dispara "¿Sigues ahí?" a los 5 min
+  const inactiveTimerRef = useRef(null);  // dispara pausa a los 60 seg tras el aviso
+
+  // PARA PROBAR: cambia las dos constantes de abajo a 10_000 / 5_000 (ms),
+  // verifica, y restáuralas a 5*60_000 / 60_000 antes del commit.
+  const INACTIVITY_WARNING_MS = 5 * 60_000;  // 5 min → aparece "¿Sigues ahí?"
+  const INACTIVITY_PAUSE_MS   = 60_000;      // 60 seg → sesión en pausa
+
+  const resetInactivityTimer = useCallback(() => {
+    clearTimeout(warningTimerRef.current);
+    clearTimeout(inactiveTimerRef.current);
+    setShowInactivityWarning(false);
+    setIsInactive(false);
+    warningTimerRef.current = setTimeout(() => {
+      setShowInactivityWarning(true);
+      inactiveTimerRef.current = setTimeout(() => {
+        setShowInactivityWarning(false);
+        setIsInactive(true);
+      }, INACTIVITY_PAUSE_MS);
+    }, INACTIVITY_WARNING_MS);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     socketRef.current = io("http://127.0.0.1:3000");
@@ -91,6 +115,8 @@ function ChatPage() {
 
     socket.on("connect", () => {
       setMessages(prev => [...prev, newMsg("🟢 Agente conectado. ¿En qué te puedo ayudar?", 'system')]);
+      setIsConnected(true);
+      resetInactivityTimer();
     });
 
     socket.on("ai_response", (data) => {
@@ -135,16 +161,23 @@ function ChatPage() {
       setFlujoGuiado(null);
     });
 
+    socket.on("disconnect", () => {
+      setIsConnected(false);
+    });
+
     return () => {
       socket.off("connect");
+      socket.off("disconnect");
       socket.off("ai_response");
       socket.off("escalate_human");
       socket.off("transfer_confirmed");
       socket.off("opciones_guiadas");
       socket.off("flujo_completado");
+      clearTimeout(warningTimerRef.current);
+      clearTimeout(inactiveTimerRef.current);
       socket.disconnect();
     };
-  }, []);
+  }, [resetInactivityTimer]);
 
   useEffect(() => {
     chatBoxRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -164,6 +197,7 @@ function ChatPage() {
 
   // M3: usuario eligió una opción del flujo guiado
   const handleOpcionGuiada = (opcion) => {
+    resetInactivityTimer();
     setMessages(prev => [...prev, newMsg(opcion.texto, 'user')]);
     socketRef.current.emit("respuesta_guiada", {
       session_id: "session-react-01",
@@ -175,6 +209,7 @@ function ChatPage() {
   const sendMessage = (e) => {
     e.preventDefault();
     if (!input.trim()) return;
+    resetInactivityTimer();
     if (!botActivo) {
       setMessages(prev => [...prev, newMsg("⏸️ El bot está en pausa. Esperando agente humano...", 'system')]);
       setInput('');
@@ -264,9 +299,10 @@ function ChatPage() {
             }}>
               <span style={{
                 width: '8px', height: '8px', borderRadius: '50%',
-                background: '#a5d6a7', display: 'inline-block', flexShrink: 0,
+                background: isConnected ? '#a5d6a7' : '#ef9a9a',
+                display: 'inline-block', flexShrink: 0,
               }} />
-              En línea
+              {isConnected ? 'En línea' : 'Reconectando…'}
             </span>
           </div>
         </div>
@@ -385,7 +421,46 @@ function ChatPage() {
               ))}
             </div>
           </div>
-        ) : (
+        ) : null}
+
+        {/* Banner de inactividad — aparece sobre el input, nunca bloquea */}
+        {(showInactivityWarning || isInactive) && (
+          <div style={{
+            padding: '0.6rem 1.5rem',
+            background: isInactive ? '#fff3e0' : '#fffde7',
+            borderTop: `1px solid ${isInactive ? '#ffcc80' : '#fff176'}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '0.5rem',
+            flexShrink: 0,
+            fontSize: '0.85rem',
+            color: isInactive ? '#e65100' : '#f57f17',
+            fontFamily: "'Inter','Segoe UI',sans-serif",
+          }}>
+            <span>
+              {isInactive
+                ? '⏸ Sesión en pausa — escribe para reactivar'
+                : '💬 ¿Sigues ahí?'}
+            </span>
+            {!isInactive && (
+              <button
+                onClick={resetInactivityTimer}
+                style={{
+                  background: '#f9a825', color: '#fff', border: 'none',
+                  borderRadius: '12px', padding: '0.3rem 0.9rem',
+                  cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem',
+                  fontFamily: "'Inter','Segoe UI',sans-serif",
+                  flexShrink: 0,
+                }}
+              >
+                Sigo aquí ✓
+              </button>
+            )}
+          </div>
+        )}
+
+        {flujoGuiado ? null : (
           <form
             onSubmit={sendMessage}
             style={{
