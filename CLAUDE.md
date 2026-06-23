@@ -5,6 +5,22 @@
 
 ---
 
+## Estado actual / Próximo paso
+
+> **PRÓXIMO PASO (sesión siguiente): Implementar M4 — consulta de datos reales desde el chat.**
+>
+> Escenario elegido: el usuario consulta el estado de un ticket existente y el bot responde
+> con datos reales de la tabla `tickets_clasificados` (reutilizar lo existente, no crear
+> escenario nuevo).
+>
+> Pendiente antes de implementar:
+> 1. Diagnosticar si `tickets_clasificados` tiene un identificador consultable (folio/ID).
+> 2. Diseñar intent nuevo `consulta_estado_ticket` sin romper el clasificador, árboles M3,
+>    M5, LLM ni la memoria de conversación.
+> 3. Empezar siempre por diagnóstico, no por implementación.
+
+---
+
 ## Entorno de trabajo
 - **SO**: Windows + **PowerShell** (no CMD ni bash). Usa sintaxis de PowerShell: separa
   comandos con `;`, **no** con `&&`.
