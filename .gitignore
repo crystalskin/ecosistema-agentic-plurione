@@ -10,3 +10,8 @@ dist/
 
 # Entornos y bases de datos
 .env
+
+# Artefactos de entrenamiento ML (pesados, se regeneran)
+resultados_ac06/
+modelos_storage/
+mlruns/
