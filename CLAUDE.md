@@ -7,19 +7,27 @@
 
 ## Estado actual / Próximo paso
 
-> **PRÓXIMO PASO (sesión siguiente): Implementar M4 — consulta de datos reales desde el chat.**
+> **PRÓXIMO PASO (sesión siguiente): mejora de demo del folio (backfill tickets cerrados
+> + setval) o responsive móvil — a decidir.**
 >
-> Escenario elegido: el usuario consulta el estado de un ticket existente y el bot responde
-> con datos reales de la tabla `tickets_clasificados` (reutilizar lo existente, no crear
-> escenario nuevo).
+> Estado al 2026-06-23:
+> - **M4 — consulta de estado de ticket: ✅ COMPLETADO** (commit c771ada). El chat
+>   detecta folio TK-XXXXX vía regex en FastAPI antes del shortcircuit RAG, NestJS hace
+>   el SELECT por folio vía TypeORM y responde con plantilla determinista. Folio generado
+>   por secuencia PostgreSQL atómica (nextval). Memoria y RabbitMQ intactos.
+>   - Limitación conocida (PRD): folios secuenciales + sin auth = enumerable (IDOR).
+>   - Mejora de demo PENDIENTE: backfillear folios a 2-3 tickets `cerrado` del seed para
+>     demostrar estados distintos. Cuidado: hacer `setval` de la secuencia por encima del
+>     rango asignado a mano, o el próximo POST choca con el unique constraint.
+> - **M7 — ciclo completo verificado en vivo (2026-06-23):** AC-06 entrenó candidato
+>   fresco 764c4aeb (F1 0.76, con ZIP). AC-08 lo comparó contra el activo c081a33
+>   (F1 0.82) y lo RECHAZÓ automáticamente (rollback), protegiendo producción. Demo
+>   lista. NOTA DE DEMO: correr SIEMPRE AC-06 antes de AC-08 en la misma sesión — si
+>   se corre AC-08 solo, los únicos candidatos que quedan son huérfanos sin ZIP del
+>   02/06 y dice "ningún candidato válido".
 >
-> Pendiente antes de implementar:
-> 1. Diagnosticar si `tickets_clasificados` tiene un identificador consultable (folio/ID).
-> 2. Diseñar intent nuevo `consulta_estado_ticket` sin romper el clasificador, árboles M3,
->    M5, LLM ni la memoria de conversación.
-> 3. Empezar siempre por diagnóstico, no por implementación.
-
----
+> Principio reafirmado: NO editar tags de MLflow a mano para fabricar la demo. La vía
+> válida es re-entrenar limpio (AC-06 → AC-08).
 
 ## Entorno de trabajo
 - **SO**: Windows + **PowerShell** (no CMD ni bash). Usa sintaxis de PowerShell: separa
