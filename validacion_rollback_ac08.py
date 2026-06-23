@@ -136,7 +136,7 @@ def conectar_mlflow():
 # =====================================================================
 
 def buscar_candidato(client, experiment_id):
-    """Busca el último run con status='candidato'."""
+    """Busca el candidato más reciente que tenga ZIP en modelos_storage/."""
     print(f"\n{'=' * 60}")
     print(f"  FASE 2: BUSCAR MODELO CANDIDATO")
     print(f"{'=' * 60}")
@@ -145,24 +145,31 @@ def buscar_candidato(client, experiment_id):
         experiment_ids=[experiment_id],
         filter_string="tags.status = 'candidato'",
         order_by=["attribute.start_time DESC"],
-        max_results=1,
+        max_results=50,
     )
 
     if not runs:
         print(f"  ❌ No hay modelo con status 'candidato'")
         return None
 
-    run = runs[0]
-    fecha = datetime.fromtimestamp(
-        run.info.start_time / 1000
-    ).strftime("%Y-%m-%d %H:%M:%S")
+    storage_dir = Path("./modelos_storage")
+    for run in runs:
+        ruta_zip = storage_dir / f"{run.info.run_id}.zip"
+        if ruta_zip.exists():
+            fecha = datetime.fromtimestamp(
+                run.info.start_time / 1000
+            ).strftime("%Y-%m-%d %H:%M:%S")
+            print(f"  ✅ Candidato encontrado:")
+            print(f"     Run ID: {run.info.run_id}")
+            print(f"     Nombre: {run.data.tags.get('mlflow.runName', 'sin nombre')}")
+            print(f"     Fecha:  {fecha}")
+            return run
+        else:
+            print(f"  ⚠️  Run {run.info.run_id[:8]}... sin ZIP en disco, descartado.")
 
-    print(f"  ✅ Candidato encontrado:")
-    print(f"     Run ID: {run.info.run_id}")
-    print(f"     Nombre: {run.data.tags.get('mlflow.runName', 'sin nombre')}")
-    print(f"     Fecha:  {fecha}")
-
-    return run
+    print(f"  ⛔ Ningún candidato tiene modelo en disco.")
+    print(f"     Ejecuta AC-06 para entrenar un candidato válido.")
+    return None
 
 
 def buscar_activo(client, experiment_id):
