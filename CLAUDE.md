@@ -7,8 +7,9 @@
 
 ## Estado actual / Próximo paso
 
-> **PRÓXIMO PASO (sesión siguiente): mejora de demo del folio (backfill tickets cerrados
-> + setval) o responsive móvil — a decidir.**
+> **PRÓXIMO PASO (sesión siguiente): desarrollo de features prácticamente cerrado;
+> pendientes: ensayo de demo completo y entregables de documentación (PRD + MVP en
+> markdown).**
 >
 > Estado al 2026-06-23:
 > - **M4 — consulta de estado de ticket: ✅ COMPLETADO** (commit c771ada). El chat
@@ -25,6 +26,12 @@
 >   lista. NOTA DE DEMO: correr SIEMPRE AC-06 antes de AC-08 en la misma sesión — si
 >   se corre AC-08 solo, los únicos candidatos que quedan son huérfanos sin ZIP del
 >   02/06 y dice "ningún candidato válido".
+>
+> - **Notificación de inactividad del chat (frontend):** tras 5 min sin actividad muestra
+>   banner "¿Sigues ahí?"; tras 60 seg más, marca sesión "en pausa" (reversible — escribir
+>   reactiva). Temporizador 100% en ChatPage.jsx, no toca socket ni memoria de FastAPI.
+>   Incluye indicador de conexión real (disconnect/connect) que muestra "Reconectando…"
+>   en rojo cuando el socket cae, en vez del "En línea" fijo anterior. Commit e10a6bc.
 >
 > Principio reafirmado: NO editar tags de MLflow a mano para fabricar la demo. La vía
 > válida es re-entrenar limpio (AC-06 → AC-08).
