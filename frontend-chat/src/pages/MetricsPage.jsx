@@ -247,7 +247,7 @@ export default function MetricsPage() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div style={page}>
+    <div style={page} className="metrics-page">
 
       {/* HEADER */}
       <div style={{
@@ -259,7 +259,7 @@ export default function MetricsPage() {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
-      }}>
+      }} className="metrics-header">
         <div>
           <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 700, letterSpacing: '-0.01em' }}>
             Dashboard de Métricas
@@ -314,7 +314,7 @@ export default function MetricsPage() {
         gap: '1.5rem',
         marginBottom: '1.5rem',
         alignItems: 'start',
-      }}>
+      }} className="metrics-row">
         {/* Pie — sentimientos */}
         <Card>
           <CardTitle>Distribución de Sentimientos</CardTitle>
@@ -384,7 +384,7 @@ export default function MetricsPage() {
         gap: '1.5rem',
         marginBottom: '1.5rem',
         alignItems: 'start',
-      }}>
+      }} className="metrics-row">
         {/* HorizontalBar — categorías */}
         <Card>
           <CardTitle>Tickets por Categoría</CardTitle>
@@ -400,7 +400,7 @@ export default function MetricsPage() {
                 <YAxis
                   type="category" dataKey="categoria"
                   tick={{ fontSize: 11, fill: C.textSub }}
-                  width={110}
+                  width={85}
                 />
                 <Tooltip
                   formatter={v => [v, 'Tickets']}

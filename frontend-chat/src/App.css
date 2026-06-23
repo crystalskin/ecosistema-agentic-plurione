@@ -116,3 +116,10 @@ body {
 .chat-input button:hover {
   background: #128c7e;
 }
+
+/* ── Responsive 375px — demo móvil ────────────────────────────── */
+@media (max-width: 600px) {
+  .metrics-page   { padding: 1rem !important; }
+  .metrics-header { padding: 1rem !important; }
+  .metrics-row    { grid-template-columns: 1fr !important; }
+}
