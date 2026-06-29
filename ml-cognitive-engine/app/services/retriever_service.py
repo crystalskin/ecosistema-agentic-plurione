@@ -27,4 +27,19 @@ class RetrieverService:
             return self.faqs[best_index]['a'], best_score
         return None, best_score
 
+    def search_topn(self, query: str, n: int = 3, threshold: float = 0.3) -> list[tuple[str, float]]:
+        """Devuelve hasta n fragmentos FAQ con score ≥ threshold, ordenados por score desc."""
+        query_embedding = self.model.encode([query])
+        query_embedding = query_embedding / np.linalg.norm(query_embedding)
+        scores = np.dot(self.db_embeddings, query_embedding.T).flatten()
+
+        resultados = []
+        for idx in np.argsort(scores)[::-1]:
+            if float(scores[idx]) < threshold:
+                break
+            resultados.append((self.faqs[idx]['a'], float(scores[idx])))
+            if len(resultados) >= n:
+                break
+        return resultados
+
 retriever_service = RetrieverService()

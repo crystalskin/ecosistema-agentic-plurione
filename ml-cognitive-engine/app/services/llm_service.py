@@ -2,6 +2,8 @@ import time
 from app.services.retriever_service import retriever_service
 from app.services import ollama_service
 
+USAR_LLM_FIRST = True   # False → vuelve al comportamiento anterior (top-1 FAQ)
+
 class LLMService:
     """
     Servicio híbrido: genera respuestas con Qwen2.5-7B (Ollama) cuando hay
@@ -33,14 +35,28 @@ class LLMService:
 
         # 3. Intent informativo + FAQ encontrado → generativo anclado al FAQ
         if intent in intenciones_informativas and faq_answer and score >= 0.3:
-            t_llm0 = time.perf_counter()
-            respuesta = ollama_service.generar_respuesta_con_contexto(raw_text, faq_answer, history)
-            t_llm1 = time.perf_counter()
-            if respuesta:
-                print(f"[TIMING LLM] ollama_gen={t_llm1-t_llm0:.3f}s")
-                return respuesta
-            # Ollama no disponible: plantilla de respaldo (sin cambio de comportamiento)
-            print("[LLMService] Ollama sin respuesta → plantilla de respaldo.")
+            if USAR_LLM_FIRST:
+                fragmentos = retriever_service.search_topn(raw_text, n=3)
+                contexto = (
+                    "\n".join(f"DATO {i+1}: {r}" for i, (r, _) in enumerate(fragmentos))
+                    if fragmentos else faq_answer
+                )
+                t_llm0 = time.perf_counter()
+                respuesta = ollama_service.generar_respuesta_con_contexto(raw_text, contexto, history)
+                t_llm1 = time.perf_counter()
+                if respuesta:
+                    print(f"[TIMING LLM] ollama_gen={t_llm1-t_llm0:.3f}s | llm_first=True | n={len(fragmentos)}")
+                    return respuesta
+                print("[LLMService] LLM-first sin respuesta → plantilla de respaldo.")
+            else:
+                t_llm0 = time.perf_counter()
+                respuesta = ollama_service.generar_respuesta_con_contexto(raw_text, faq_answer, history)
+                t_llm1 = time.perf_counter()
+                if respuesta:
+                    print(f"[TIMING LLM] ollama_gen={t_llm1-t_llm0:.3f}s")
+                    return respuesta
+                print("[LLMService] Ollama sin respuesta → plantilla de respaldo.")
+            # Fallback compartido — Ollama no disponible en cualquier rama
             if "horario" in intent or "hora" in faq_answer.lower():
                 return f"¡Con gusto! {faq_answer} ¿Le puedo ayudar en algo más?"
             elif "dirección" in intent or "direccion" in intent or "ubicado" in faq_answer.lower():
