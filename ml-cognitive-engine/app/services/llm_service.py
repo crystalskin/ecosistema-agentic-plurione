@@ -42,39 +42,39 @@ class LLMService:
             # Ollama no disponible: plantilla de respaldo (sin cambio de comportamiento)
             print("[LLMService] Ollama sin respuesta → plantilla de respaldo.")
             if "horario" in intent or "hora" in faq_answer.lower():
-                return f"¡Claro! {faq_answer} ¿Te puedo ayudar en algo más?"
+                return f"¡Con gusto! {faq_answer} ¿Le puedo ayudar en algo más?"
             elif "dirección" in intent or "direccion" in intent or "ubicado" in faq_answer.lower():
-                return f"Nuestra ubicación: {faq_answer} ¿Necesitas algo más?"
+                return f"Nuestra ubicación: {faq_answer} ¿Le puedo ayudar en algo más?"
             else:
-                return f"{faq_answer} ¿Necesitas algo más?"
+                return f"{faq_answer} ¿Le puedo ayudar en algo más?"
 
         # 4. Plantillas por sentimiento e intención
         if sentiment == "negative":
             if "queja" in intent or "problema" in intent or "fallo" in intent:
-                return ("Lamento muchísimo el inconveniente. Entiendo tu molestia y quiero ayudarte a resolverlo cuanto antes. "
-                        "¿Podrías darme más detalles de lo sucedido? Si prefieres, te comunico de inmediato con un agente humano.")
+                return ("Lamento muchísimo el inconveniente. Entiendo su molestia y quiero ayudarle a resolverlo cuanto antes. "
+                        "¿Podría darme más detalles de lo sucedido? Si lo prefiere, le comunico de inmediato con un agente humano.")
             else:
-                return ("Siento que estés pasando por esto. Cuéntame un poco más para entender mejor tu situación "
-                        "y encontrar una solución. Si lo deseas, puedo transferirte con un agente humano.")
+                return ("Siento que esté pasando por esto. Cuénteme un poco más para entender mejor su situación "
+                        "y encontrar una solución. Si lo desea, puedo transferirle con un agente humano.")
 
         # 5. Intenciones que requieren soporte técnico o asistencia (sentimiento neutro)
         if intent in ["problema_tarjeta_bancaria", "fallo_tecnico", "solicitud_reembolso"]:
-            return ("Entiendo que tienes una dificultad. ¿Podrías darme más detalles sobre lo que sucede? "
-                    "Así puedo orientarte mejor o, si lo prefieres, comunicarte con un agente humano.")
+            return ("Entiendo que tiene una dificultad. ¿Podría darme más detalles sobre lo que sucede? "
+                    "Así puedo orientarle mejor o, si lo prefiere, comunicarle con un agente humano.")
 
         # 6. Consultas sin FAQ
         if intent in ["consulta_horario", "consulta_direccion", "informacion_general"]:
-            return ("Permíteme revisar esa información. ¿Podrías ser un poco más específico? "
-                    "Así te doy la respuesta exacta que necesitas.")
+            return ("Permítame revisar esa información. ¿Podría ser un poco más específico? "
+                    "Así le doy la respuesta exacta que necesita.")
 
         # 7. Saludo / Despedida
         if intent == "saludo":
-            return "¡Hola! Soy el asistente virtual de PluriOne. ¿En qué puedo ayudarte hoy?"
+            return "¡Hola! Soy el asistente virtual de PluriOne. ¿En qué puedo ayudarle hoy?"
 
         if intent == "despedida":
-            return "¡Gracias por contactarnos! Estamos a tu disposición cuando lo necesites. ¡Que tengas excelente día!"
+            return "¡Gracias por contactarnos! Estamos a su disposición cuando lo necesite. ¡Que tenga excelente día!"
 
         # 8. Fallback genérico
-        return "Gracias por tu mensaje. ¿Podrías darme más detalles para entender mejor cómo ayudarte?"
+        return "Gracias por su mensaje. ¿Podría darme más detalles para entender mejor cómo ayudarle?"
 
 llm_service = LLMService()

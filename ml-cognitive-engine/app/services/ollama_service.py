@@ -11,14 +11,16 @@ y llm_service cae automáticamente a su plantilla de respaldo.
 """
 
 import requests
+from pathlib import Path
 
 OLLAMA_URL   = "http://localhost:11434/api/generate"
 OLLAMA_MODEL = "qwen2.5:7b"
 TIMEOUT_SEG  = 15      # timeout por respuesta
 MAX_TOKENS   = 120     # respuestas concisas para chatbot
 
-# System prompt: ancla el modelo al FAQ, impide alucinaciones
-_SYSTEM_PROMPT = (
+# System prompt: cargado desde persona_agente.md al importar el módulo (una vez).
+# Fallback al texto anterior si el archivo no existe o falla la lectura.
+_SYSTEM_PROMPT_FALLBACK = (
     "Eres un asistente de servicio al cliente de PluriOne, empresa mexicana. "
     "REGLAS ESTRICTAS: "
     "1. Responde ÚNICAMENTE usando la información del CONTEXTO provisto. "
@@ -28,6 +30,13 @@ _SYSTEM_PROMPT = (
     "4. Responde en español mexicano, máximo 3 oraciones, tono amigable y directo. "
     "5. No menciones que usas un contexto o base de conocimiento."
 )
+_PERSONA_PATH = Path(__file__).parent.parent / "knowledge_base" / "persona_agente.md"
+try:
+    _SYSTEM_PROMPT = _PERSONA_PATH.read_text(encoding="utf-8")
+    print(f"[OllamaService] Persona cargada desde {_PERSONA_PATH.name}")
+except Exception as _e:
+    print(f"[OllamaService] WARN: no se pudo leer persona_agente.md ({_e}). Usando fallback.")
+    _SYSTEM_PROMPT = _SYSTEM_PROMPT_FALLBACK
 
 
 def verificar_conexion() -> bool:

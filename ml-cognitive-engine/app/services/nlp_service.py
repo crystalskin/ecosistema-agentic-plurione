@@ -67,7 +67,7 @@ class NLPService:
         # CORTOCIRCUITO: si el FAQ responde con alta confianza, omite BERT + BART
         faq_rapido, rag_score = retriever_service.search(raw_text, threshold=RAG_SHORTCIRCUIT_THRESHOLD)
         if faq_rapido is not None:
-            respuesta_sc = f"¡Claro! {faq_rapido} ¿Puedo ayudarte en algo más?"
+            respuesta_sc = f"¡Con gusto! {faq_rapido} ¿Le puedo ayudar en algo más?"
             self._get_hist(session_id).append({"user": raw_text, "bot": respuesta_sc})
             print(f"[SHORTCIRCUIT] score={rag_score:.3f} → BERT+BART omitidos | total={time.perf_counter()-t0:.3f}s")
             return PayloadData(
