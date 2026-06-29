@@ -53,7 +53,7 @@ class NLPService:
         folio_match = _FOLIO_RE.search(raw_text)
         if folio_match:
             folio = folio_match.group(0).upper()
-            respuesta_sc = f"Consultando el estado de tu ticket {folio}..."
+            respuesta_sc = f"Consultando el estado de su ticket {folio}..."
             self._get_hist(session_id).append({"user": raw_text, "bot": respuesta_sc})
             print(f"[FOLIO] Detectado {folio} → intent=consulta_estado_ticket | total={time.perf_counter()-t0:.3f}s")
             return PayloadData(
@@ -122,6 +122,15 @@ class NLPService:
         if any(k in raw_text.lower() for k in keywords_tecnico) and top_intent == "despedida":
             top_intent = "fallo_tecnico"
             intent_confidence = 0.82
+
+        # --- CORRECCIÓN: evitar que frases de despedida sean clasificadas como "saludo" ---
+        keywords_despedida = [
+            "adiós", "adios", "hasta luego", "bye", "chao",
+            "hasta pronto", "nos vemos", "gracias por todo",
+        ]
+        if any(k in raw_text.lower() for k in keywords_despedida) and top_intent == "saludo":
+            top_intent = "despedida"
+            intent_confidence = 0.83
 
         # 3. Forzar neutral si es consulta informativa
         if top_intent in ["consulta_horario", "consulta_direccion", "informacion_general"]:
