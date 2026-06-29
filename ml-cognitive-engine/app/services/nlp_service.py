@@ -132,6 +132,21 @@ class NLPService:
             top_intent = "despedida"
             intent_confidence = 0.83
 
+        # --- CORRECCIÓN: evitar que preguntas de navegación/contacto caigan en fallo_tecnico ---
+        keywords_navegacion = [
+            "llegar hasta", "llego hasta",
+            "cómo llegar a", "como llegar a",
+            "indicaciones para llegar",
+            "cómo llegamos", "como llegamos",
+            "cómo hago para llegar", "como hago para llegar",
+            "cómo los contacto", "como los contacto",
+            "cómo contacto", "como contacto",
+            "puedo ir a",
+        ]
+        if any(k in raw_text.lower() for k in keywords_navegacion) and top_intent == "fallo_tecnico":
+            top_intent = "consulta_direccion"
+            intent_confidence = 0.80
+
         # 3. Forzar neutral si es consulta informativa
         if top_intent in ["consulta_horario", "consulta_direccion", "informacion_general"]:
             sentiment_label = "neutral"
