@@ -165,7 +165,7 @@ class NLPService:
 
         # 4. Generar respuesta (híbrida) — con historial de conversación
         t_llm0 = time.perf_counter()
-        response = llm_service.generate_response(raw_text, top_intent, sentiment_label, hist)
+        response = llm_service.generate_response(raw_text, top_intent, sentiment_label, hist, intent_confidence)
         t_llm1 = time.perf_counter()
 
         self._get_hist(session_id).append({"user": raw_text, "bot": response})

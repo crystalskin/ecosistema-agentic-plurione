@@ -4,6 +4,9 @@ from app.services import ollama_service
 
 USAR_LLM_FIRST = True   # False → vuelve al comportamiento anterior (top-1 FAQ)
 
+USAR_LLM_FIRST_CLASIF = True       # False → comportamiento actual en R4/R8 (sin rescate)
+UMBRAL_CONFIANZA_RESCATE = 0.45    # confianza < esto = "BART dudó" → intentar rescate vía LLM
+
 class LLMService:
     """
     Servicio híbrido: genera respuestas con Qwen2.5-7B (Ollama) cuando hay
@@ -19,7 +22,7 @@ class LLMService:
             print("[HybridAgent] Ollama no disponible → modo plantillas (fallback completo).")
 
     def generate_response(self, raw_text: str, intent: str, sentiment: str,
-                          history: list | None = None) -> str:
+                          history: list | None = None, intent_confidence: float = 1.0) -> str:
         history = history or []
         # 1. Buscar en el FAQ con umbral más bajo (0.3)
         t_rag0 = time.perf_counter()
@@ -75,6 +78,17 @@ class LLMService:
 
         # 5. Intenciones que requieren soporte técnico o asistencia (sentimiento neutro)
         if intent in ["problema_tarjeta_bancaria", "fallo_tecnico", "solicitud_reembolso"]:
+            rescate = USAR_LLM_FIRST_CLASIF and intent_confidence < UMBRAL_CONFIANZA_RESCATE
+            print(f"[CONF-R4R8] intent={intent} conf={intent_confidence:.3f} rescate={'sí' if rescate else 'no'}")
+            if rescate:
+                fragmentos = retriever_service.search_topn(raw_text, n=3)
+                print(f"[RESCATE-C] intent={intent} conf={intent_confidence:.3f} "
+                      f"frags={len(fragmentos)} → {'LLM' if fragmentos else 'plantilla'}")
+                if fragmentos:
+                    contexto = "\n".join(f"DATO {i+1}: {r}" for i, (r, _) in enumerate(fragmentos))
+                    respuesta = ollama_service.generar_respuesta_con_contexto(raw_text, contexto, history)
+                    if respuesta:
+                        return respuesta
             return ("Entiendo que tiene una dificultad. ¿Podría darme más detalles sobre lo que sucede? "
                     "Así puedo orientarle mejor o, si lo prefiere, comunicarle con un agente humano.")
 
@@ -91,6 +105,17 @@ class LLMService:
             return "¡Gracias por contactarnos! Estamos a su disposición cuando lo necesite. ¡Que tenga excelente día!"
 
         # 8. Fallback genérico
+        rescate = USAR_LLM_FIRST_CLASIF and intent_confidence < UMBRAL_CONFIANZA_RESCATE
+        print(f"[CONF-R4R8] intent={intent} conf={intent_confidence:.3f} rescate={'sí' if rescate else 'no'}")
+        if rescate:
+            fragmentos = retriever_service.search_topn(raw_text, n=3)
+            print(f"[RESCATE-C] intent={intent} conf={intent_confidence:.3f} "
+                  f"frags={len(fragmentos)} → {'LLM' if fragmentos else 'plantilla'}")
+            if fragmentos:
+                contexto = "\n".join(f"DATO {i+1}: {r}" for i, (r, _) in enumerate(fragmentos))
+                respuesta = ollama_service.generar_respuesta_con_contexto(raw_text, contexto, history)
+                if respuesta:
+                    return respuesta
         return "Gracias por su mensaje. ¿Podría darme más detalles para entender mejor cómo ayudarle?"
 
 llm_service = LLMService()
