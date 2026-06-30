@@ -1,30 +1,42 @@
 [
   {
-    "q": "¿Cuál es el horario de atención?",
-    "a": "Nuestro horario de atención al cliente es de lunes a viernes de 9:00 AM a 6:00 PM, tiempo de la Ciudad de México."
+    "q": "¿Qué servicios ofrecen?",
+    "a": "En PluriOne ofrecemos consultoría tecnológica, desarrollo de software a medida, capacitación en tecnologías de la información y creación de equipos de talento tecnológico."
+  },
+  {
+    "q": "¿Ofrecen capacitación o cursos?",
+    "a": "Sí, ofrecemos capacitación con certificación en áreas como trabajo desde casa, habilidades blandas (soft skills), metodología Scrum, historias de usuario, inteligencia artificial y programación en Java."
+  },
+  {
+    "q": "¿Dan capacitación en inteligencia artificial?",
+    "a": "Sí, contamos con capacitación en inteligencia artificial, con certificación al concluir el curso."
+  },
+  {
+    "q": "¿Sus capacitaciones tienen costo?",
+    "a": "No, nuestras capacitaciones son gratuitas e incluyen certificación al concluirlas."
+  },
+  {
+    "q": "¿Qué cursos o capacitaciones puedo tomar?",
+    "a": "Ofrecemos capacitaciones con certificación en trabajo desde casa, habilidades blandas, Scrum, historias de usuario, inteligencia artificial y Java. Todas son gratuitas."
   },
   {
     "q": "¿Dónde están ubicados?",
-    "a": "Estamos ubicados en Puebla 46, Colonia Roma Norte, Alcaldía Cuauhtémoc, C.P. 06700, CDMX."
+    "a": "Estamos ubicados en Puebla 46, Colonia Roma Norte, Alcaldía Cuauhtémoc, C.P. 06700, Ciudad de México."
   },
   {
-    "q": "¿Cómo puedo contactarlos por teléfono?",
-    "a": "Puedes llamarnos al 55 1900 3503 o escribirnos a contacto@develop.com.mx."
+    "q": "¿Cómo llego a sus oficinas?",
+    "a": "Nuestras oficinas están en Puebla 46, Colonia Roma Norte, Alcaldía Cuauhtémoc, Ciudad de México. Para indicaciones específicas según su punto de partida, con gusto podemos orientarle si nos contacta al 55 1900 3503."
   },
   {
-    "q": "¿Qué servicios ofrecen?",
-    "a": "Ofrecemos consultoría, desarrollo de software a medida, capacitación en TI y creación de equipos de talento tecnológico."
+    "q": "¿Cuál es su horario de atención?",
+    "a": "Nuestro horario de atención es de lunes a viernes de 9:00 a.m. a 6:00 p.m., hora de la Ciudad de México."
   },
   {
-  "q": "¿A qué hora abren?",
-  "a": "Nuestro horario de atención al cliente es de lunes a viernes de 9:00 a.m. a 6:00 p.m. (hora de la Ciudad de México)."
+    "q": "¿Cómo puedo contactarlos?",
+    "a": "Puede comunicarse con nosotros al teléfono 55 1900 3503 o al correo electrónico contacto@develop.com.mx, de lunes a viernes de 9:00 a.m. a 6:00 p.m."
   },
   {
-  "q": "¿A qué hora abren?",
-  "a": "Nuestro horario de atención al cliente es de lunes a viernes de 9:00 a.m. a 6:00 p.m., hora de la Ciudad de México."
-  },
-  {
-    "q": "¿Cuál es su horario?",
-    "a": "Atendemos de lunes a viernes de 9:00 a.m. a 6:00 p.m., hora de la Ciudad de México."
+    "q": "¿Atienden de forma remota o en línea?",
+    "a": "Sí, brindamos atención en línea y de forma remota, además de la atención presencial en nuestras oficinas."
   }
 ]
