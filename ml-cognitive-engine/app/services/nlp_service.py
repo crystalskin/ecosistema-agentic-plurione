@@ -147,10 +147,46 @@ class NLPService:
             top_intent = "consulta_direccion"
             intent_confidence = 0.80
 
-        # 3. Forzar neutral si es consulta informativa
-        if top_intent in ["consulta_horario", "consulta_direccion", "informacion_general"]:
+        # Marcadores de queja — usados por el bloque 3b y el bloque 4
+        _kw_queja = [
+            "cobr", "mal", "error", "no funciona", "no sirve",
+            "pesimo", "pésimo", "molest", "enojad", "harto",
+            "queja", "reclamo", "estafa", "fraude",
+            "horrible", "terrible", "nunca", "tarde", "demora", "problema",
+            "porquer",
+        ]
+
+        # 3. Intents informativos confiables → siempre neutral (BART los misclasifica poco)
+        if top_intent in [
+            "consulta_horario", "consulta_direccion", "informacion_general",
+            "consulta_estado_orden",
+        ]:
             sentiment_label = "neutral"
             emotion = "neutral"
+
+        # 3b. saludo/despedida: neutral SOLO si el texto no tiene marcador de queja
+        #     BART usa estos intents como cajón de sastre para texto no estructurado,
+        #     una queja misclasificada aquí no debe apagarse sin protección.
+        elif top_intent in ["saludo", "despedida"]:
+            if not any(k in raw_text.lower() for k in _kw_queja):
+                sentiment_label = "neutral"
+                emotion = "neutral"
+
+        # 4. Override: pregunta informativa de servicio con sentimiento BERT falso-negativo
+        #    Solo actúa si BERT ya dio "negative"; si es neutral/positive no hace nada.
+        _kw_informativas = [
+            "atienden", "tienen", "ofrecen", "dan ", "hacen",
+            "cuentan con", "manejan", "disponen", "puedo tomar",
+            "hay ", "existe", "cuanto cuesta", "que servicios", "que cursos",
+        ]
+        if (
+            sentiment_label == "negative"
+            and any(k in raw_text.lower() for k in _kw_informativas)
+            and not any(k in raw_text.lower() for k in _kw_queja)
+        ):
+            sentiment_label = "neutral"
+            emotion = "neutral"
+            print(f"[SENT-OVERRIDE] '{raw_text[:40]}' negative→neutral (pregunta informativa)")
 
         sentiment_data = SentimentData(
             label=sentiment_label,
