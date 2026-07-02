@@ -102,6 +102,13 @@ class LLMService:
             return "¡Hola! Soy el asistente virtual de PluriOne. ¿En qué puedo ayudarle hoy?"
 
         if intent == "despedida":
+            fragmentos = retriever_service.search_topn(raw_text, n=3)
+            print(f"[RESCATE-R7] intent=despedida frags={len(fragmentos)} → {'LLM' if fragmentos else 'plantilla'}")
+            if fragmentos:
+                contexto = "\n".join(f"DATO {i+1}: {r}" for i, (r, _) in enumerate(fragmentos))
+                respuesta = ollama_service.generar_respuesta_con_contexto(raw_text, contexto, history)
+                if respuesta:
+                    return respuesta
             return "¡Gracias por contactarnos! Estamos a su disposición cuando lo necesite. ¡Que tenga excelente día!"
 
         # 8. Fallback genérico

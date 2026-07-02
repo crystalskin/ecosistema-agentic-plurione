@@ -154,6 +154,8 @@ class NLPService:
             "queja", "reclamo", "estafa", "fraude",
             "horrible", "terrible", "nunca", "tarde", "demora", "problema",
             "porquer",
+            "wtf", "no me abren", "no abren", "nadie abre",
+            "nadie contesta", "nadie responde",
         ]
 
         # 3. Intents informativos confiables → siempre neutral (BART los misclasifica poco)
@@ -178,6 +180,8 @@ class NLPService:
             "atienden", "tienen", "ofrecen", "dan ", "hacen",
             "cuentan con", "manejan", "disponen", "puedo tomar",
             "hay ", "existe", "cuanto cuesta", "que servicios", "que cursos",
+            "llegar hasta", "llego hasta", "como llego", "cómo llego",
+            "puedo llegar", "como llegar", "cómo llegar",
         ]
         if (
             sentiment_label == "negative"
