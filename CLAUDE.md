@@ -7,34 +7,19 @@
 
 ## Estado actual / Próximo paso
 
-> **PRÓXIMO PASO (sesión siguiente): desarrollo de features prácticamente cerrado;
-> pendientes: ensayo de demo completo y entregables de documentación (PRD + MVP en
-> markdown).**
+> **ESTADO (sesiones recientes): mejoras de calidad conversacional del chat (M1) completadas.**
 >
-> Estado al 2026-06-23:
-> - **M4 — consulta de estado de ticket: ✅ COMPLETADO** (commit c771ada). El chat
->   detecta folio TK-XXXXX vía regex en FastAPI antes del shortcircuit RAG, NestJS hace
->   el SELECT por folio vía TypeORM y responde con plantilla determinista. Folio generado
->   por secuencia PostgreSQL atómica (nextval). Memoria y RabbitMQ intactos.
->   - Limitación conocida (PRD): folios secuenciales + sin auth = enumerable (IDOR).
->   - Mejora de demo PENDIENTE: backfillear folios a 2-3 tickets `cerrado` del seed para
->     demostrar estados distintos. Cuidado: hacer `setval` de la secuencia por encima del
->     rango asignado a mano, o el próximo POST choca con el unique constraint.
-> - **M7 — ciclo completo verificado en vivo (2026-06-23):** AC-06 entrenó candidato
->   fresco 764c4aeb (F1 0.76, con ZIP). AC-08 lo comparó contra el activo c081a33
->   (F1 0.82) y lo RECHAZÓ automáticamente (rollback), protegiendo producción. Demo
->   lista. NOTA DE DEMO: correr SIEMPRE AC-06 antes de AC-08 en la misma sesión — si
->   se corre AC-08 solo, los únicos candidatos que quedan son huérfanos sin ZIP del
->   02/06 y dice "ningún candidato válido".
+> Se trabajó una tanda de mejoras sobre la generación de respuestas y el clasificador,
+> todas verificadas end-to-end y commiteadas. Ver la nueva sección
+> "Mejoras de calidad conversacional (M1)" más abajo para el detalle.
 >
-> - **Notificación de inactividad del chat (frontend):** tras 5 min sin actividad muestra
->   banner "¿Sigues ahí?"; tras 60 seg más, marca sesión "en pausa" (reversible — escribir
->   reactiva). Temporizador 100% en ChatPage.jsx, no toca socket ni memoria de FastAPI.
->   Incluye indicador de conexión real (disconnect/connect) que muestra "Reconectando…"
->   en rojo cuando el socket cae, en vez del "En línea" fijo anterior. Commit e10a6bc.
->
-> Principio reafirmado: NO editar tags de MLflow a mano para fabricar la demo. La vía
-> válida es re-entrenar limpio (AC-06 → AC-08).
+> **Posibles próximos pasos (no urgentes):**
+> 1. Latencia: el rescate LLM (Opción C) puede tardar ~2–12 s (primera llamada en frío).
+>    Evaluar si conviene optimizar para la demo.
+> 2. R5 (consultas informativas sin match de FAQ): candidata a recibir la misma lógica
+>    de rescate de la Opción C.
+> 3. Anexos de la memoria de estadía (capturas dashboard/chat/MLflow, diagramas).
+> 4. Empezar siempre por diagnóstico, no por implementación. Probar antes de commitear.
 
 ## Entorno de trabajo
 - **SO**: Windows + **PowerShell** (no CMD ni bash). Usa sintaxis de PowerShell: separa
@@ -274,6 +259,65 @@ lanza FastAPI / NestJS / React en terminales separadas y abre el navegador cuand
   *Scripts*: `entrenamiento_ac06.py`, `validacion_rollback_ac08.py`, `generador_dataset.py`,
   `consumidor.py`. MLflow en `localhost:5000`.
 - **M8 — Análisis de sentimiento en tiempo real**: ✅ Integrado en `nlp_service.py`.
+- **M1 — Mejoras de calidad conversacional** (sesiones recientes): ✅ Verificadas y commiteadas.
+  Tanda de mejoras sobre tono, clasificación y generación del chat, todas con interruptor
+  reversible y sin tocar M3/M4/M5/M7. Commits: `019b9d7`, `317295c`, `2f16655`, `2b37e96`,
+  `3dd67db`, `b112c10`, `c0cfcdf`, `2056934`.
+
+  1. **Persona "Dev"** (`019b9d7`): system prompt del LLM cargado desde
+     `ml-cognitive-engine/app/knowledge_base/persona_agente.md` (ejecutivo de PluriOne,
+     trato de usted, cálido con autoridad técnica, reglas anti-alucinación). Se carga en
+     `ollama_service.py` al iniciar, con fallback al prompt anterior si el archivo falla.
+     Editar el .md + reiniciar FastAPI para iterar el tono sin tocar código.
+
+  2. **Tono unificado a usted** (`019b9d7`, `317295c`): las 11 plantillas de respuesta y el
+     string de folio pasaron de tuteo a usted. Cierre estándar: "¿Le puedo ayudar en algo más?".
+
+  3. **Override de despedida** (`317295c`): "gracias, adiós" ya no se clasifica como saludo.
+     Keywords de cierre (adiós, hasta luego, bye, chao, etc.) fuerzan `despedida`.
+
+  4. **FAQ enriquecido** (`2b37e96`): `knowledge_base/plurione_faq.json` pasó de 7 a 10 entradas.
+     Se eliminaron 4 duplicados de horario y se añadieron capacitación/cursos, IA,
+     costo (capacitaciones gratuitas), cómo llegar y atención remota. Datos reales de PluriOne.
+
+  5. **LLM-first mínimo (top-3 FAQ)** (`2f16655`): en las consultas informativas, el LLM
+     recibe los 3 mejores fragmentos del FAQ (`retriever_service.search_topn`) en vez de 1,
+     para responder mejor y alucinar menos. Interruptor `USAR_LLM_FIRST` en `llm_service.py`.
+
+  6. **Override de navegación** (`3dd67db`): preguntas tipo "cómo llego hasta allá" que BART
+     mandaba a `fallo_tecnico` se rescatan a `consulta_direccion` (keywords con "hasta" +
+     condición `top_intent == "fallo_tecnico"`).
+
+  7. **Opción C — rescate híbrido por confianza** (`b112c10`): en R4 (soporte) y R8 (fallback),
+     si BART clasificó con **baja confianza** (`intent_confidence < 0.45`), se intenta responder
+     con el FAQ vía LLM antes de la plantilla. `intent_confidence` se pasa ahora a
+     `generate_response` (default 1.0 seguro). Interruptor `USAR_LLM_FIRST_CLASIF`,
+     umbral `UMBRAL_CONFIANZA_RESCATE = 0.45`. Logging `[CONF-R4R8]` / `[RESCATE-C]`.
+     No toca el `intent`/`sentiment` que viaja a NestJS — M3/M4/M5 intactos.
+     Verificado: "¿hacen capacitación en IA?" (conf 0.166) rescatada correctamente.
+
+  8. **Arreglo de sentimiento** (`c0cfcdf` + parte previa): ver punto 2 de "Pendientes menores".
+
+  9. **R7 (despedida) con rescate LLM + navegación + frustración corta** (`2056934`):
+     - R7 dejó de ser plantilla ciega: ahora consulta el FAQ (search_topn) y
+       responde vía LLM si hay match; la plantilla de despedida queda solo como
+       fallback.
+     - Añade verbos de navegación ("llegar hasta", "como llego", "puedo llegar"...)
+       a `_kw_informativas`, rescatando preguntas tipo "cómo llego desde X".
+     - Añade marcadores de frustración corta ("wtf", "no me abren", "nadie
+       contesta"...) a `_kw_queja`, para que un cliente varado/molesto escale.
+     - Verificado en navegador: "estoy afuera y no me abren" escala; "cómo llego
+       desde hospital general" fluye sin escalar; quejas siguen escalando.
+     - Pendiente menor: abreviaturas coloquiales (ej: "ubi") aún no matchean el
+       FAQ — candidato a fase futura.
+
+  **Arquitectura clave confirmada en diagnóstico**: M3 y M5 se disparan en **NestJS**
+  (`chat.gateway.ts`), leyendo `intent`/`sentiment` que calcula Python. Por eso BART y BERT
+  **deben seguir ejecutándose siempre** — el LLM-first solo cambia el TEXTO de la respuesta,
+  nunca el `intent`/`sentiment`. Esta es la razón por la que la Opción C es segura.
+
+  *Archivos*: `nlp_service.py`, `llm_service.py`, `ollama_service.py`, `retriever_service.py`,
+  `knowledge_base/persona_agente.md`, `knowledge_base/plurione_faq.json`.
 - **M9 — Alta disponibilidad**: ❌ No iniciado.
 - **M10 — Clasificación de tickets**: ✅ Completado (Fases 1–2).
   Clasificador zero-shot BART reutilizado de `nlp_service.py` con etiquetas descriptivas en inglés.
@@ -296,10 +340,16 @@ perseguir ahora para evitar otro ciclo de ajuste de umbrales.
 1. **"me cobraron de más"** no dispara el árbol de cobro (`queja_cobro_duplicado`);
    sí funciona "me cobraron dos veces". Falta mapear esa variante semántica en el
    clasificador o en los keywords de `nlp_service.py`.
-2. **"¿tienen sucursal en X?"** (pregunta informativa) fue clasificada como frustración
-   y disparó escalamiento M5. Error de clasificación BART. No peligroso (no inventó
-   datos), pero la experiencia de usuario es mala. Requiere override de keyword o
-   ajuste de umbral de sentimiento para consultas de ubicación.
+2. ✅ **RESUELTO** — **"¿tienen sucursal en X?" / "atienden en línea?"** (preguntas
+   informativas) se clasificaban con sentimiento negativo y disparaban escalamiento M5
+   por error. Causa: el modelo BERT (`nlptown`, entrenado en reseñas) asigna 1–2 estrellas
+   a preguntas cortas neutrales. Solución en dos capas en `nlp_service.py`:
+   (a) forced-neutral ampliado a `saludo`, `despedida`, `consulta_estado_orden`;
+   (b) override de sentimiento por keyword: si el texto es pregunta informativa de servicio
+   y NO contiene marcadores de queja, se fuerza neutral.
+   Además se cerró un fallo de seguridad derivado: una queja mal clasificada por BART como
+   `saludo`/`despedida` se aplanaba sin protección — ahora `saludo`/`despedida` solo se
+   aplanan si el texto no tiene marcadores de queja (lista `_kw_queja`).
 
 ---
 
