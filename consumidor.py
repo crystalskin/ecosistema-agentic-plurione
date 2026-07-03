@@ -57,9 +57,15 @@ try:
             respuesta_agente    TEXT,
             correccion_esperada TEXT,
             clasificacion_error VARCHAR(100),
+            intencion_detectada VARCHAR(100),
             incluido_en_dataset BOOLEAN DEFAULT FALSE,
             fecha_captura       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+    """)
+    conn.commit()
+    cursor.execute("""
+        ALTER TABLE logs_interacciones
+          ADD COLUMN IF NOT EXISTS intencion_detectada VARCHAR(100);
     """)
     conn.commit()
     cursor.close()
@@ -99,6 +105,7 @@ def recibir_mensaje(ch, method, properties, body):
         # Extraer los datos planos que necesita la tabla
         texto_usuario    = payload.get('raw_text')
         intent           = payload.get('intent', {})
+        intencion_detectada = intent.get('label')   # None → NULL si payload malformado
         sentiment        = payload.get('sentiment', {})
         respuesta_agente = payload.get('generated_response')
 
@@ -128,9 +135,10 @@ def recibir_mensaje(ch, method, properties, body):
             INSERT INTO logs_interacciones (
                 id_interaccion, modulo_origen, fecha_interaccion,
                 resultado, paso_fallido, sentimiento_final,
-                texto_usuario, respuesta_agente, clasificacion_error
+                texto_usuario, respuesta_agente, clasificacion_error,
+                intencion_detectada
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (id_interaccion) DO NOTHING;
         """, (
             event_id,
@@ -142,6 +150,7 @@ def recibir_mensaje(ch, method, properties, body):
             texto_usuario,
             respuesta_agente,
             clasificacion,
+            intencion_detectada,
         ))
         conn.commit()
         cursor.close()
