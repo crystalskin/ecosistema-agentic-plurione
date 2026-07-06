@@ -19,6 +19,10 @@ import os
 import json
 import mlflow
 import shutil
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+import seaborn as sns
 import mlflow.transformers
 import numpy as np
 import torch
@@ -46,7 +50,7 @@ from sklearn.metrics import (
 # =====================================================================
 
 # --- Rutas ---
-DATASETS_DIR = Path("./datasets_ac05")
+DATASETS_DIR = Path("./datasets_bart10")
 MLFLOW_TRACKING_URI = "http://localhost:5000"
 EXPERIMENT_NAME = "AC06_FineTuning_IntencionClasificador"
 
@@ -55,14 +59,16 @@ MODEL_BASE = "distilbert-base-uncased"
 
 # --- Mapa de intenciones ---
 LABEL_MAP = {
-    "consulta_saldo": 0,
-    "cambio_plan": 1,
-    "cancelacion_servicio": 2,
-    "reclamo_facturacion": 3,
-    "problema_tecnico": 4,
-    "solicitar_humano": 5,
-    "info_productos": 6,
-    "otro": 7,
+    "queja_cobro_duplicado":     0,
+    "problema_tarjeta_bancaria": 1,
+    "fallo_tecnico":             2,
+    "solicitud_reembolso":       3,
+    "consulta_estado_orden":     4,
+    "consulta_horario":          5,
+    "consulta_direccion":        6,
+    "saludo":                    7,
+    "despedida":                 8,
+    "informacion_general":       9,
 }
 LABEL_MAP_INV = {v: k for k, v in LABEL_MAP.items()}
 NUM_LABELS = len(LABEL_MAP)
@@ -391,14 +397,41 @@ def entrenar_modelo(modelo, tokenizer, dataset):
         zero_division=0,
     ))
 
-    return trainer, metricas_finales, resultado
+    # Matriz de confusión — reutiliza y_true/y_pred ya calculados
+    labels_str = [LABEL_MAP_INV[i] for i in range(NUM_LABELS)]
+    y_true_str = [LABEL_MAP_INV[i] for i in y_true]
+    y_pred_str = [LABEL_MAP_INV[i] for i in y_pred]
+
+    cm = confusion_matrix(y_true_str, y_pred_str, labels=labels_str)
+    cm_norm = cm.astype("float") / cm.sum(axis=1, keepdims=True)
+    cm_norm = np.nan_to_num(cm_norm)
+
+    fig, ax = plt.subplots(figsize=(11, 9))
+    sns.heatmap(
+        cm_norm, annot=True, fmt=".2f", cmap="Blues",
+        xticklabels=labels_str, yticklabels=labels_str,
+        cbar_kws={"label": "Proporción"}, ax=ax,
+    )
+    ax.set_xlabel("Predicción del modelo")
+    ax.set_ylabel("Etiqueta real")
+    ax.set_title("Matriz de confusión — AC-06 Intenciones")
+    plt.xticks(rotation=45, ha="right")
+    plt.yticks(rotation=0)
+    plt.tight_layout()
+
+    ruta_png = "matriz_confusion_ac06.png"
+    fig.savefig(ruta_png, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    print(f"\n  🖼️  Matriz de confusión guardada: {ruta_png}")
+
+    return trainer, metricas_finales, resultado, ruta_png
 
 
 # =====================================================================
 # 7. REGISTRO EN MLFLOW
 # =====================================================================
 
-def registrar_en_mlflow(trainer, tokenizer, metricas_finales, resultado_train, dataset):
+def registrar_en_mlflow(trainer, tokenizer, metricas_finales, resultado_train, dataset, ruta_cm_png=None):
     """Registra todo el experimento en MLflow (AC-11)."""
     print("\n" + "=" * 60)
     print("  FASE 5: REGISTRO EN MLFLOW (bóveda AC-11)")
@@ -491,6 +524,14 @@ def registrar_en_mlflow(trainer, tokenizer, metricas_finales, resultado_train, d
         # 5. Limpiar carpeta temporal (el ZIP se queda guardado)
         shutil.rmtree(str(modelo_dir), ignore_errors=True)
 
+        # --- Matriz de confusión ---
+        if ruta_cm_png and Path(ruta_cm_png).exists():
+            try:
+                mlflow.log_artifact(ruta_cm_png, artifact_path="evaluacion")
+                print(f"  🖼️  Matriz de confusión subida a MLflow.")
+            except Exception as e:
+                print(f"  ⚠️  No se pudo subir la matriz de confusión: {e}")
+
         # --- Tags ---
         print(f"  🏷️  Registrando tags...")
         mlflow.set_tag("status", "candidato")
@@ -543,14 +584,16 @@ def probar_modelo(trainer, tokenizer):
     )
 
     frases_prueba = [
-        "Quiero cancelar mi servicio de internet",
-        "¿Cuánto saldo me queda en mi cuenta?",
-        "Necesito cambiar a un plan más económico",
-        "Me cobraron dos veces este mes, quiero un reclamo",
-        "La aplicación no funciona correctamente",
-        "Quiero hablar con un agente humano por favor",
-        "¿Qué planes tienen disponibles?",
-        "Hola, buenos días",
+        "me cobraron dos veces este mes",              # queja_cobro_duplicado
+        "mi tarjeta fue rechazada en el comercio",     # problema_tarjeta_bancaria
+        "la aplicación no carga",                      # fallo_tecnico
+        "quiero un reembolso de mi pago",              # solicitud_reembolso
+        "dónde está mi pedido",                        # consulta_estado_orden
+        "cuál es su horario de atención",              # consulta_horario
+        "dónde están ubicados",                        # consulta_direccion
+        "hola buenos días",                            # saludo
+        "gracias hasta luego",                         # despedida
+        "dan capacitación en inteligencia artificial", # informacion_general
     ]
 
     print(f"\n  🧪 Probando con {len(frases_prueba)} frases de ejemplo:\n")
@@ -592,7 +635,7 @@ def main():
         dataset = preparar_dataset_hf(datos_train, datos_val, tokenizer)
 
         # FASE 4: Entrenar
-        trainer, metricas_finales, resultado_train = entrenar_modelo(
+        trainer, metricas_finales, resultado_train, ruta_png = entrenar_modelo(
             modelo, tokenizer, dataset
         )
 
@@ -601,7 +644,8 @@ def main():
 
         # FASE 6: Registrar en MLflow
         run_id = registrar_en_mlflow(
-            trainer, tokenizer, metricas_finales, resultado_train, dataset
+            trainer, tokenizer, metricas_finales, resultado_train, dataset,
+            ruta_cm_png=ruta_png,
         )
 
         # Resumen final

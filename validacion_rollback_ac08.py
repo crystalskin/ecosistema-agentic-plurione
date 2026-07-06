@@ -42,18 +42,20 @@ import shutil
 
 MLFLOW_TRACKING_URI = "http://localhost:5000"
 EXPERIMENT_NAME = "AC06_FineTuning_IntencionClasificador"
-DATASETS_DIR = Path("./datasets_ac05")
+DATASETS_DIR = Path("./datasets_bart10")
 MODEL_BASE = "distilbert-base-uncased"
 
 LABEL_MAP = {
-    "consulta_saldo": 0,
-    "cambio_plan": 1,
-    "cancelacion_servicio": 2,
-    "reclamo_facturacion": 3,
-    "problema_tecnico": 4,
-    "solicitar_humano": 5,
-    "info_productos": 6,
-    "otro": 7,
+    "queja_cobro_duplicado":     0,
+    "problema_tarjeta_bancaria": 1,
+    "fallo_tecnico":             2,
+    "solicitud_reembolso":       3,
+    "consulta_estado_orden":     4,
+    "consulta_horario":          5,
+    "consulta_direccion":        6,
+    "saludo":                    7,
+    "despedida":                 8,
+    "informacion_general":       9,
 }
 LABEL_MAP_INV = {v: k for k, v in LABEL_MAP.items()}
 

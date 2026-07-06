@@ -1,0 +1,100 @@
+{"texto_usuario": "me facturaron dos veces en el mismo periodo por favor", "intencion": "queja_cobro_duplicado"}
+{"texto_usuario": "cómo llego a sus oficinas", "intencion": "consulta_direccion"}
+{"texto_usuario": "ofrecen desarrollo de software.", "intencion": "informacion_general"}
+{"texto_usuario": "no puedo activar mi tarjeta por favor", "intencion": "problema_tarjeta_bancaria"}
+{"texto_usuario": "no me deja hacer el pago en línea", "intencion": "fallo_tecnico"}
+{"texto_usuario": "gracias que tenga buen día", "intencion": "despedida"}
+{"texto_usuario": "las capacitaciones tienen costo", "intencion": "informacion_general"}
+{"texto_usuario": "cómo proceso una devolución", "intencion": "solicitud_reembolso"}
+{"texto_usuario": "aparece un cargo duplicado en mi estado de cuenta", "intencion": "queja_cobro_duplicado"}
+{"texto_usuario": "dan cursos de Scrum.", "intencion": "informacion_general"}
+{"texto_usuario": "están abiertos los domingos por favor", "intencion": "consulta_horario"}
+{"texto_usuario": "Oye, dan cursos de scrum", "intencion": "informacion_general"}
+{"texto_usuario": "hola por favor", "intencion": "saludo"}
+{"texto_usuario": "Oye, me pasan la dirección por favor", "intencion": "consulta_direccion"}
+{"texto_usuario": "Oye, ofrecen servicios de talento tecnológico", "intencion": "informacion_general"}
+{"texto_usuario": "Oye, quiero saber el estatus de mi compra", "intencion": "consulta_estado_orden"}
+{"texto_usuario": "aparecen dos pagos iguales y solo hice uno", "intencion": "queja_cobro_duplicado"}
+{"texto_usuario": "la tarjeta está bloqueada y no sé por qué", "intencion": "problema_tarjeta_bancaria"}
+{"texto_usuario": "hey buenas", "intencion": "saludo"}
+{"texto_usuario": "me pasan la dirección por favor", "intencion": "consulta_direccion"}
+{"texto_usuario": "Oye, cuánto tarda en aplicarse el reembolso", "intencion": "solicitud_reembolso"}
+{"texto_usuario": "Oye, hasta pronto", "intencion": "despedida"}
+{"texto_usuario": "en qué colonia están", "intencion": "consulta_direccion"}
+{"texto_usuario": "Oye, el sistema está caído", "intencion": "fallo_tecnico"}
+{"texto_usuario": "me cobraron algo que no pedí por favor", "intencion": "queja_cobro_duplicado"}
+{"texto_usuario": "me cobraron algo que no pedí", "intencion": "queja_cobro_duplicado"}
+{"texto_usuario": "Oye, me facturaron dos veces en el mismo periodo", "intencion": "queja_cobro_duplicado"}
+{"texto_usuario": "cuándo me devuelven mi dinero", "intencion": "solicitud_reembolso"}
+{"texto_usuario": "hasta qué hora atienden.", "intencion": "consulta_horario"}
+{"texto_usuario": "hey buenas por favor", "intencion": "saludo"}
+{"texto_usuario": "necesito información sobre mi orden", "intencion": "consulta_estado_orden"}
+{"texto_usuario": "el seguimiento no actualiza", "intencion": "consulta_estado_orden"}
+{"texto_usuario": "tienen oficina en la Ciudad de México por favor", "intencion": "consulta_direccion"}
+{"texto_usuario": "Oye, buen día", "intencion": "saludo"}
+{"texto_usuario": "tengo problemas con la plataforma", "intencion": "fallo_tecnico"}
+{"texto_usuario": "gracias que tenga buen día", "intencion": "despedida"}
+{"texto_usuario": "la tarjeta fue rechazada en el comercio.", "intencion": "problema_tarjeta_bancaria"}
+{"texto_usuario": "me pasan la dirección por favor.", "intencion": "consulta_direccion"}
+{"texto_usuario": "hola necesito ayuda", "intencion": "saludo"}
+{"texto_usuario": "me cobraron algo que no pedí", "intencion": "queja_cobro_duplicado"}
+{"texto_usuario": "dan cursos de Scrum.", "intencion": "informacion_general"}
+{"texto_usuario": "listo eso era todo gracias por favor", "intencion": "despedida"}
+{"texto_usuario": "quiero saber el estatus de mi devolución por favor", "intencion": "solicitud_reembolso"}
+{"texto_usuario": "las capacitaciones tienen costo", "intencion": "informacion_general"}
+{"texto_usuario": "ya con eso me queda claro gracias", "intencion": "despedida"}
+{"texto_usuario": "el servicio está muy lento", "intencion": "fallo_tecnico"}
+{"texto_usuario": "Oye, aparecen dos pagos iguales y solo hice uno", "intencion": "queja_cobro_duplicado"}
+{"texto_usuario": "hola me pueden ayudar por favor", "intencion": "saludo"}
+{"texto_usuario": "me pasan la dirección por favor", "intencion": "consulta_direccion"}
+{"texto_usuario": "me sale error al iniciar sesión.", "intencion": "fallo_tecnico"}
+{"texto_usuario": "qué cursos tienen disponibles por favor", "intencion": "informacion_general"}
+{"texto_usuario": "tienen cursos de Java o programación por favor", "intencion": "informacion_general"}
+{"texto_usuario": "Oye, me hicieron un doble cobro", "intencion": "queja_cobro_duplicado"}
+{"texto_usuario": "aparece un cargo duplicado en mi estado de cuenta por favor", "intencion": "queja_cobro_duplicado"}
+{"texto_usuario": "gracias que tenga buen día por favor", "intencion": "despedida"}
+{"texto_usuario": "hey buenas.", "intencion": "saludo"}
+{"texto_usuario": "aparece un cargo duplicado en mi estado de cuenta.", "intencion": "queja_cobro_duplicado"}
+{"texto_usuario": "Oye, cómo proceso una devolución", "intencion": "solicitud_reembolso"}
+{"texto_usuario": "el terminal no lee mi tarjeta.", "intencion": "problema_tarjeta_bancaria"}
+{"texto_usuario": "la tarjeta fue rechazada en el comercio por favor", "intencion": "problema_tarjeta_bancaria"}
+{"texto_usuario": "Oye, quiero reportar mi tarjeta como robada", "intencion": "problema_tarjeta_bancaria"}
+{"texto_usuario": "quiero saber el estatus de mi devolución por favor", "intencion": "solicitud_reembolso"}
+{"texto_usuario": "mi pedido dice entregado pero no lo recibí", "intencion": "consulta_estado_orden"}
+{"texto_usuario": "hasta qué hora atienden.", "intencion": "consulta_horario"}
+{"texto_usuario": "hey buenas por favor", "intencion": "saludo"}
+{"texto_usuario": "hay un cargo repetido que no autoricé", "intencion": "queja_cobro_duplicado"}
+{"texto_usuario": "quiero reportar mi tarjeta como robada.", "intencion": "problema_tarjeta_bancaria"}
+{"texto_usuario": "me cobraron algo que no pedí.", "intencion": "queja_cobro_duplicado"}
+{"texto_usuario": "la tarjeta fue rechazada en el comercio", "intencion": "problema_tarjeta_bancaria"}
+{"texto_usuario": "gracias que tenga buen día", "intencion": "despedida"}
+{"texto_usuario": "el seguimiento no actualiza", "intencion": "consulta_estado_orden"}
+{"texto_usuario": "hola buen día.", "intencion": "saludo"}
+{"texto_usuario": "nos vemos por favor", "intencion": "despedida"}
+{"texto_usuario": "solicito la devolución del pago por favor", "intencion": "solicitud_reembolso"}
+{"texto_usuario": "Oye, buen día", "intencion": "saludo"}
+{"texto_usuario": "Oye, gracias que tenga buen día", "intencion": "despedida"}
+{"texto_usuario": "cobro doble sin autorización.", "intencion": "queja_cobro_duplicado"}
+{"texto_usuario": "hasta pronto", "intencion": "despedida"}
+{"texto_usuario": "quiero saber el estatus de mi compra", "intencion": "consulta_estado_orden"}
+{"texto_usuario": "qué servicios ofrecen.", "intencion": "informacion_general"}
+{"texto_usuario": "Oye, buenas tardes", "intencion": "saludo"}
+{"texto_usuario": "mi tarjeta no funciona", "intencion": "problema_tarjeta_bancaria"}
+{"texto_usuario": "adiós.", "intencion": "despedida"}
+{"texto_usuario": "quiero un reembolso por favor", "intencion": "solicitud_reembolso"}
+{"texto_usuario": "me sale error al iniciar sesión", "intencion": "fallo_tecnico"}
+{"texto_usuario": "el terminal no lee mi tarjeta", "intencion": "problema_tarjeta_bancaria"}
+{"texto_usuario": "Oye, qué cursos tienen disponibles", "intencion": "informacion_general"}
+{"texto_usuario": "las capacitaciones tienen costo por favor", "intencion": "informacion_general"}
+{"texto_usuario": "Oye, pantalla en blanco al abrir la app", "intencion": "fallo_tecnico"}
+{"texto_usuario": "adiós", "intencion": "despedida"}
+{"texto_usuario": "el sistema está caído", "intencion": "fallo_tecnico"}
+{"texto_usuario": "Oye, ofrecen desarrollo de software", "intencion": "informacion_general"}
+{"texto_usuario": "necesito que me abonen el reembolso pendiente por favor", "intencion": "solicitud_reembolso"}
+{"texto_usuario": "el servicio está muy lento", "intencion": "fallo_tecnico"}
+{"texto_usuario": "qué áreas de capacitación tienen por favor", "intencion": "informacion_general"}
+{"texto_usuario": "Oye, la página no funciona", "intencion": "fallo_tecnico"}
+{"texto_usuario": "Oye, me clonaron la tarjeta", "intencion": "problema_tarjeta_bancaria"}
+{"texto_usuario": "no puedo activar mi tarjeta", "intencion": "problema_tarjeta_bancaria"}
+{"texto_usuario": "Oye, están abiertos los domingos", "intencion": "consulta_horario"}
+{"texto_usuario": "el seguimiento no actualiza por favor", "intencion": "consulta_estado_orden"}
